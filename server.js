@@ -1,5 +1,6 @@
 
 const express = require('express');
+const { generarGraficaLeveyJennings } = require('./utils/grafica');
 
 const app = express();
 const PORT = 3000;
@@ -173,6 +174,80 @@ app.post('/api/levey-jennings/calcular', (req, res) => {
     alertas
   });
 });
+
+
+// Endpoint para generar la gráfica Levey-Jennings
+app.post('/api/levey-jennings/grafica', async (req, res) => {
+  try {
+    const {
+      prueba,
+      media,
+      desviacionEstandar,
+      resultados
+    } = req.body;
+
+    // Validar media y desviación estándar
+    if (
+      typeof media !== 'number' ||
+      !Number.isFinite(media) ||
+      typeof desviacionEstandar !== 'number' ||
+      !Number.isFinite(desviacionEstandar) ||
+      desviacionEstandar <= 0
+    ) {
+      return res.status(400).json({
+        error: 'La media debe ser numérica y la desviación estándar debe ser mayor que cero.'
+      });
+    }
+
+    // Validar resultados
+    if (
+      !Array.isArray(resultados) ||
+      resultados.length === 0 ||
+      resultados.some(
+        r =>
+          !r ||
+          typeof r.fecha !== 'string' ||
+          Number.isNaN(Date.parse(r.fecha)) ||
+          typeof r.valor !== 'number' ||
+          !Number.isFinite(r.valor)
+      )
+    ) {
+      return res.status(400).json({
+        error: 'Envía al menos un resultado con fecha válida y valor numérico.'
+      });
+    }
+
+    // Ordenar resultados por fecha
+    const resultadosOrdenados = [...resultados].sort(
+      (a, b) => Date.parse(a.fecha) - Date.parse(b.fecha)
+    );
+
+    // Generar imagen PNG
+    const imagen = await  generarGraficaLeveyJennings({
+      prueba,
+      media,
+      desviacionEstandar,
+      resultados: resultadosOrdenados
+    });
+
+    // Enviar imagen al cliente
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="grafica-levey-jennings.png"'
+    );
+
+    res.send(imagen);
+
+  } catch (error) {
+    console.error('Error al generar gráfica:', error);
+
+    res.status(500).json({
+      error: 'No fue posible generar la gráfica.'
+    });
+  }
+});
+
 
 // Iniciar el servidor
 app.listen(PORT, () => {
