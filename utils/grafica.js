@@ -12,11 +12,12 @@ const chartJSNodeCanvas = new ChartJSNodeCanvas({
 
 async function generarGraficaLeveyJennings(datos) {
   const {
-    prueba,
-    media,
-    desviacionEstandar,
-    resultados
-  } = datos;
+  prueba,
+  media,
+  desviacionEstandar,
+  resultados,
+  alertas = []
+} = datos;
 
   const fechas = resultados.map(r => r.fecha);
 
@@ -39,16 +40,44 @@ async function generarGraficaLeveyJennings(datos) {
       labels: fechas,
 
       datasets: [
-        {
-          label: 'Resultados de control',
-          data: resultados.map(r => r.valor),
-          borderColor: '#2563eb',
-          backgroundColor: '#2563eb',
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          showLine: true,
-          tension: 0
-        },
+       {
+  label: 'Resultados de control',
+
+  data: resultados.map(r => r.valor),
+
+  // Color de los puntos según las desviaciones estándar
+  pointBackgroundColor: resultados.map(r => {
+    const zScore = (r.valor - media) / desviacionEstandar;
+    const distancia = Math.abs(zScore);
+
+    if (distancia > 3) {
+      return '#dc2626'; // Rojo: fuera de ±3 DE
+    }
+
+    if (distancia > 2) {
+      return '#f59e0b'; // Naranja: entre ±2 y ±3 DE
+    }
+
+    return '#2563eb'; // Azul: dentro de ±2 DE
+  }),
+
+  pointBorderColor: resultados.map(r => {
+    const zScore = (r.valor - media) / desviacionEstandar;
+    const distancia = Math.abs(zScore);
+
+    if (distancia > 3) return '#dc2626';
+    if (distancia > 2) return '#f59e0b';
+
+    return '#2563eb';
+  }),
+
+  borderColor: '#2563eb',
+  pointRadius: 7,
+  pointHoverRadius: 10,
+  pointBorderWidth: 2,
+  showLine: true,
+  tension: 0
+},
         {
           label: '+3 DE',
           data: linea(limites.mas3DE),
