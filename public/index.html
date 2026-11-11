@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Sistema de Control de Calidad</title>
+
+    <link rel="stylesheet" href="estilos.css">
+</head>
+
+<body>
+
+    <header class="encabezado">
+        <h1>Control de Calidad</h1>
+        <p>Sistema de análisis estadístico de laboratorio</p>
+    </header>
+
+    <main class="contenedor">
+
+        <section class="tarjeta">
+
+            <h2>Registro de nueva prueba</h2>
+
+            <div class="campo">
+                <label for="prueba">Nombre de la prueba</label>
+                <input
+                    type="text"
+                    id="prueba"
+                    placeholder="Ej. Glucosa"
+                >
+            </div>
+
+            <h3>Mediciones de control</h3>
+
+            <p class="descripcion">
+                Introduce las 20 mediciones con sus respectivas fechas.
+            </p>
+
+            <div class="tabla-contenedor">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>N.º</th>
+                            <th>Fecha</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaMediciones">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <button id="btnAnalizar">
+                Guardar y analizar
+            </button>
+
+            <div id="mensaje"></div>
+
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+
+</body>
+</html>

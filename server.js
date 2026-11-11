@@ -1,18 +1,22 @@
 
 const express = require('express');
+const app = express();
+app.use(express.json());
+app.use(express.static('public'));
+
 const { generarGraficaLeveyJennings } = require('./utils/grafica');
+const { pruebaGrubbs } = require('./utils/grubbs');
 const Medicion = require('./models/medicion');
 const ParametroControl = require('./models/parametroControl');
+const { calcularEstadisticas } = require('./utils/estadisticas');
+const Analisis = require('./models/analisis');
 
 require('dotenv').config();
 
 const conectarDB = require('./config/database');
 
-const app = express();
-const PORT = 3000;
 
-// Permite recibir datos en formato JSON
-app.use(express.json());
+const PORT = 3000;
 
 
 app.post('/api/control/registrar', async (req, res) => {
@@ -88,6 +92,81 @@ app.post('/api/control/registrar', async (req, res) => {
     }
 
 });
+
+app.post('/api/control/registrar-lote', async (req, res) => {
+
+
+ 
+    try {
+
+        const { prueba, mediciones } = req.body || {};
+
+        if (!prueba || typeof prueba !== 'string' || !prueba.trim()) {
+            return res.status(400).json({
+                mensaje: 'Debes proporcionar el nombre de la prueba.'
+            });
+        }
+
+        if (!Array.isArray(mediciones) || mediciones.length !== 20) {
+            return res.status(400).json({
+                mensaje: 'Debes enviar exactamente 20 mediciones.'
+            });
+        }
+
+        for (let i = 0; i < mediciones.length; i++) {
+
+            const { fecha, valor } = mediciones[i] || {};
+
+            if (
+                typeof fecha !== 'string' ||
+                !Number.isFinite(Date.parse(fecha)) ||
+                !Number.isFinite(valor)
+            ) {
+                return res.status(400).json({
+                    mensaje: `La medición ${i + 1} tiene una fecha o valor inválido.`
+                });
+            }
+        }
+
+        const valores = mediciones.map(medicion => medicion.valor);
+
+        const estadisticas = calcularEstadisticas(valores);
+
+        const nuevasMediciones = mediciones.map(medicion => ({
+            prueba: prueba.trim(),
+            fecha: new Date(`${medicion.fecha}T12:00:00.000Z`),
+            valor: medicion.valor
+        }));
+
+        const resultado = await Medicion.insertMany(nuevasMediciones);
+
+        const nuevoAnalisis = await Analisis.create({
+            prueba: prueba.trim(),
+            ...estadisticas,
+            mediciones: resultado.map(medicion => ({
+                fecha: medicion.fecha,
+                valor: medicion.valor
+            }))
+        });
+
+        res.status(201).json({
+            mensaje: 'Las 20 mediciones se registraron y analizaron correctamente.',
+            analisis: nuevoAnalisis
+        });
+
+    } catch (error) {
+
+        console.error('Error al registrar y analizar:', error);
+
+        res.status(500).json({
+            mensaje: 'Error al registrar y analizar las mediciones.',
+            error: error.message
+        });
+
+    }
+
+});
+
 
 
 // Endpoint de bienvenida para comprobar que la API funciona
@@ -343,6 +422,8 @@ app.post('/api/levey-jennings/grafica', async (req, res) => {
   }
 });
 
+// Endpoint para consultar el historial de mediciones con filtros
+
 
 app.get('/api/control/historial', async (req, res) => {
     try {
@@ -392,6 +473,7 @@ app.get('/api/control/historial', async (req, res) => {
     }
 });
 
+// Endpoint para registrar parámetros de control
 
 
 app.post('/api/control/parametros', async (req, res) => {
@@ -465,6 +547,8 @@ app.post('/api/control/parametros', async (req, res) => {
     }
 });
 
+// Endpoint para consultar parámetros de control con filtros
+
 
 app.get('/api/control/parametros', async (req, res) => {
     try {
@@ -503,6 +587,8 @@ app.get('/api/control/parametros', async (req, res) => {
         });
     }
 });
+
+//Endpoint para realizar análisis de control de calidad y aplicar reglas de Westgard
 
 
 
@@ -563,6 +649,13 @@ app.get('/api/control/analisis', async (req, res) => {
                 valorZ: Number(valorZ.toFixed(3))
             };
         });
+
+
+// Obtener los valores numéricos de las mediciones
+const valoresGrubbs = resultados.map(resultado => resultado.valor);
+
+// Ejecutar la prueba de Grubbs
+const analisisGrubbs = pruebaGrubbs(valoresGrubbs);
 
         
 // Evaluación de reglas de Westgard
@@ -689,14 +782,11 @@ for (let i = 0; i < resultados.length; i++) {
             },
 
             limitesControl,
-
             totalMediciones: resultados.length,
-
-resultados,
-
-totalAlertas: alertas.length,
-
-alertas
+            resultados,
+            analisisGrubbs,
+            totalAlertas: alertas.length,
+            alertas
         });
 
     } catch (error) {
@@ -708,6 +798,87 @@ alertas
             error: error.message
         });
     }
+
+    
+
+
+});
+
+app.get('/api/control/grafica', async (req, res) => {
+
+    try {
+
+        const { prueba, nivelControl, lote, equipo } = req.query;
+
+        // Validar parámetros obligatorios
+        if (!prueba || !nivelControl || !lote || !equipo) {
+            return res.status(400).json({
+                mensaje: 'Debes proporcionar prueba, nivelControl, lote y equipo.'
+            });
+        }
+
+        // Buscar los parámetros de control
+        const parametro = await ParametroControl.findOne({
+            prueba,
+            nivelControl,
+            lote,
+            equipo
+        });
+
+        if (!parametro) {
+            return res.status(404).json({
+                mensaje: 'No se encontraron los parámetros de control.'
+            });
+        }
+
+        const { media, desviacionEstandar } = parametro;
+
+        // Consultar mediciones en MongoDB
+        const mediciones = await Medicion.find({
+            prueba,
+            nivelControl,
+            lote,
+            equipo
+        }).sort({ fecha: 1 });
+
+        if (mediciones.length === 0) {
+            return res.status(404).json({
+                mensaje: 'No existen mediciones para generar la gráfica.'
+            });
+        }
+
+        // Preparar datos para la gráfica
+        const datosGrafica = {
+            prueba,
+            media,
+            desviacionEstandar,
+            resultados: mediciones.map(medicion => ({
+                fecha: medicion.fecha,
+                valor: medicion.valor
+            }))
+        };
+
+        // Generar imagen PNG
+        const imagen = await generarGraficaLeveyJennings(datosGrafica);
+
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader(
+            'Content-Disposition',
+            'inline; filename="levey-jennings.png"'
+        );
+
+        return res.send(imagen);
+
+    } catch (error) {
+
+        console.error('Error al generar gráfica:', error);
+
+        return res.status(500).json({
+            mensaje: 'Error al generar la gráfica Levey-Jennings.'
+        });
+
+    }
+
 });
 
 

@@ -19,7 +19,12 @@ async function generarGraficaLeveyJennings(datos) {
   alertas = []
 } = datos;
 
-  const fechas = resultados.map(r => r.fecha);
+
+const fechas = resultados.map(r =>
+    new Date(r.fecha).toLocaleDateString('es-MX', {
+        timeZone: 'UTC'
+    })
+);
 
   const limites = {
     menos3DE: media - 3 * desviacionEstandar,

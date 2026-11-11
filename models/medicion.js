@@ -11,7 +11,7 @@ const medicionSchema = new mongoose.Schema({
 
     nivelControl: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
 
@@ -27,13 +27,13 @@ const medicionSchema = new mongoose.Schema({
 
     lote: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
 
     equipo: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     }
 
