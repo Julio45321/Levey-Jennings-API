@@ -38,7 +38,36 @@ const analisisSchema = new mongoose.Schema({
             type: Number,
             required: true
         }
-    }]
+    }],
+
+    analisisGrubbs: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null
+},
+
+    // Estado del análisis
+    estado: {
+        type: String,
+        enum: [
+            'pendiente_revision',
+            'requiere_reemplazo',
+            'completo'
+        ],
+        default: 'pendiente_revision'
+    },
+
+    // Cantidad de mediciones válidas necesarias
+    medicionesRequeridas: {
+        type: Number,
+        default: 20
+    },
+
+    // Cantidad de mediciones válidas registradas
+    totalMedicionesValidas: {
+        type: Number,
+        default: 0
+    },
+
 
 }, {
     timestamps: true,

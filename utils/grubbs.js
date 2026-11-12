@@ -1,56 +1,90 @@
 
+
 const { jStat } = require('jstat');
 
 // Prueba de Grubbs para detectar un posible valor atípico
-function pruebaGrubbs(datos, nivelSignificancia = 0.05) {
+function pruebaGrubbs(mediciones, nivelSignificancia = 0.05) {
 
-    // Validar que recibamos un conjunto de datos
-    if (!Array.isArray(datos) || datos.length < 3) {
+    // Validar el conjunto de datos
+    if (!Array.isArray(mediciones) || mediciones.length < 3) {
         return {
             error: 'Se necesitan al menos 3 mediciones para realizar la prueba de Grubbs.'
         };
     }
 
-    // Validar que todos los valores sean números válidos
-    if (!datos.every(valor => Number.isFinite(valor))) {
+    // Validar valores
+    if (!mediciones.every(m =>
+        Number.isFinite(m.valor)
+    )) {
         return {
-            error: 'Todos los datos deben ser números válidos.'
+            error: 'Todas las mediciones deben contener valores numéricos válidos.'
         };
     }
 
-    // Calcular la media
-    const n = datos.length;
+    const n = mediciones.length;
+    const valores = mediciones.map(m => m.valor);
 
-    const media = datos.reduce((suma, valor) => suma + valor, 0) / n;
+    // Calcular media
+    const suma = valores.reduce((a, b) => a + b, 0);
+    const media = suma / n;
 
-    // Calcular la desviación estándar muestral
-    const sumaCuadrados = datos.reduce(
+    // Desviación estándar muestral
+    const sumaCuadrados = valores.reduce(
         (suma, valor) => suma + Math.pow(valor - media, 2),
         0
     );
 
     const desviacionEstandar = Math.sqrt(sumaCuadrados / (n - 1));
 
-    // Evitar división entre cero
     if (desviacionEstandar === 0) {
         return {
             error: 'No se puede realizar Grubbs porque todas las mediciones son iguales.'
         };
     }
 
-    // Buscar el valor más alejado de la media
-    const valoresDistancias = datos.map(valor => Math.abs(valor - media));
+    // Identificar mínimo y máximo
+    const valorMinimo = Math.min(...valores);
+    const valorMaximo = Math.max(...valores);
 
-    const indiceMayor = valoresDistancias.indexOf(
-        Math.max(...valoresDistancias)
+    const medicionMinima = mediciones.find(m => m.valor === valorMinimo);
+    const medicionMaxima = mediciones.find(m => m.valor === valorMaximo);
+
+    // Calcular distancias
+    const distanciaInferior = media - valorMinimo;
+    const distanciaSuperior = valorMaximo - media;
+
+    const distanciaMaxima = Math.max(
+        distanciaInferior,
+        distanciaSuperior
     );
 
-    const valorSospechoso = datos[indiceMayor];
+    // Identificar el extremo más alejado
+    const esExtremoInferior = distanciaInferior > distanciaSuperior;
+    const esExtremoSuperior = distanciaSuperior > distanciaInferior;
+    const hayEmpate = distanciaInferior === distanciaSuperior;
 
-    // Calcular estadístico G
-    const G = Math.abs(valorSospechoso - media) / desviacionEstandar;
+    let valorSospechoso = null;
+    let medicionSospechosa = null;
+    let ladoSospechoso = null;
 
-    // Calcular valor crítico
+    if (!hayEmpate) {
+        valorSospechoso = esExtremoInferior
+            ? valorMinimo
+            : valorMaximo;
+
+        medicionSospechosa = esExtremoInferior
+            ? medicionMinima
+            : medicionMaxima;
+
+        ladoSospechoso = esExtremoInferior
+            ? 'Inferior'
+            : 'Superior';
+    }
+
+    // Estadístico G
+    const G = distanciaMaxima / desviacionEstandar;
+
+    // Valor crítico bilateral
     const alfa = nivelSignificancia;
 
     const tCritico = jStat.studentt.inv(
@@ -65,23 +99,45 @@ function pruebaGrubbs(datos, nivelSignificancia = 0.05) {
             (n - 2 + Math.pow(tCritico, 2))
         );
 
-    // Determinar resultado
+    // Resultado
     const esAtipico = G > Gcritico;
 
     return {
         metodo: 'Prueba de Grubbs',
         numeroMediciones: n,
+
         media: Number(media.toFixed(4)),
         desviacionEstandar: Number(desviacionEstandar.toFixed(4)),
+
+        valorMinimo,
+        fechaValorMinimo: medicionMinima.fecha,
+
+        valorMaximo,
+        fechaValorMaximo: medicionMaxima.fecha,
+
+        distanciaInferior: Number(distanciaInferior.toFixed(4)),
+        distanciaSuperior: Number(distanciaSuperior.toFixed(4)),
+        distanciaMaxima: Number(distanciaMaxima.toFixed(4)),
+
         valorSospechoso,
-        indiceValorSospechoso: indiceMayor,
+        fechaValorSospechoso: medicionSospechosa
+            ? medicionSospechosa.fecha
+            : null,
+
+        ladoSospechoso,
+        hayEmpate,
+
         estadisticoG: Number(G.toFixed(4)),
         valorCritico: Number(Gcritico.toFixed(4)),
         nivelSignificancia: alfa,
-        resultado: esAtipico
-            ? 'Posible valor atípico detectado'
-            : 'No se detectaron valores atípicos',
-        esAtipico
+
+        resultado: hayEmpate
+            ? 'Empate entre los extremos: requiere revisión'
+            : esAtipico
+                ? 'Posible valor atípico detectado'
+                : 'No se detectaron valores atípicos',
+
+        esAtipico: esAtipico && !hayEmpate
     };
 }
 
