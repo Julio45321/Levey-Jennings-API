@@ -1,113 +1,505 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Sistema de Control de Calidad</title>
 
-    <link rel="stylesheet" href="estilos.css">
-</head>
+    <link rel="stylesheet" href="estilos.css" />
+  </head>
 
-<body>
-
+  <body>
+    <!-- ENCABEZADO PRINCIPAL -->
     <header class="encabezado">
-        <h1>Control de Calidad</h1>
-        <p>Sistema de análisis estadístico de laboratorio</p>
+      <h1>Control de Calidad</h1>
+
+      <p>Sistema de análisis estadístico de laboratorio</p>
     </header>
 
     <main class="contenedor">
+      <!-- =====================================
+             REGISTRO Y RECUPERACIÓN
+        ====================================== -->
 
-        <section class="tarjeta">
+      <section class="tarjeta">
+        <!-- RECUPERAR ANÁLISIS -->
+        <div id="seccionRecuperarAnalisis" class="bloque">
+          <h2>Recuperar análisis guardado</h2>
 
-            <h2>Registro de nueva prueba</h2>
+          <p class="descripcion">
+            Escribe el nombre de la prueba para buscar los análisis registrados
+            en MongoDB.
+          </p>
 
-            <div class="campo">
-                <label for="prueba">Nombre de la prueba</label>
-                <input
-                    type="text"
-                    id="prueba"
-                    placeholder="Ej. Glucosa"
-                >
-            </div>
+          <div class="campo">
+            <label for="buscarNombrePrueba"> Nombre de la prueba </label>
 
-            <h3>Mediciones de control</h3>
+            <input
+              type="text"
+              id="buscarNombrePrueba"
+              placeholder="Ej. Glucosa"
+              autocomplete="off"
+            />
+          </div>
 
-            <p class="descripcion">
-                Introduce las 20 mediciones con sus respectivas fechas.
-            </p>
+          <button type="button" id="btnBuscarAnalisis">Buscar análisis</button>
 
-            <div class="tabla-contenedor">
+          <p id="mensajeBusqueda" aria-live="polite"></p>
 
-                <table>
+          <!-- RESULTADOS DE BÚSQUEDA -->
+          <div id="listaAnalisis" hidden>
+            <h3>Selecciona un análisis</h3>
 
-                    <thead>
-                        <tr>
-                            <th>N.º</th>
-                            <th>Fecha</th>
-                            <th>Valor</th>
-                        </tr>
-                    </thead>
+            <div id="resultadosBusqueda"></div>
+          </div>
 
-                    <tbody id="tablaMediciones">
-                    </tbody>
+          <p id="mensajeRecuperacion" aria-live="polite"></p>
+        </div>
 
-                </table>
+        <!-- REGISTRAR NUEVA PRUEBA -->
+        <div class="bloque">
+          <h2>Registro de nueva prueba</h2>
 
-            </div>
+          <div class="campo">
+            <label for="prueba"> Nombre de la prueba </label>
 
-            <button id="btnAnalizar">
-                Guardar y analizar
-            </button>
+            <input
+              type="text"
+              id="prueba"
+              placeholder="Ej. Glucosa"
+              autocomplete="off"
+            />
+          </div>
+        </div>
 
-            <div id="mensaje"></div>
+        <!-- MEDICIONES DE CONTROL -->
+        <div class="bloque">
+          <h2>Mediciones de control</h2>
 
-        </section>
+
+<!-- PESTAÑAS DE CAPTURA -->
+<div class="pestanas">
+
+    <button
+        type="button"
+        id="tabDiario"
+        class="pestana"
+        aria-selected="false"
+    >
+        Diario
+    </button>
+
+    <button
+        type="button"
+        id="tabRegistroCompleto"
+        class="pestana activa"
+        aria-selected="true"
+    >
+        Registro completo
+    </button>
+
+</div>
 
 
-<!-- Sección de resultados estadísticos -->
-<section class="tarjeta" id="seccionResultados" hidden>
+<!-- =====================================
+     PANEL DE REGISTRO DIARIO
+====================================== -->
 
-    <h2>Resultados del análisis estadístico</h2>
+<div
+    id="panelDiario"
+    class="panel-pestana"
+    hidden
+>
 
-    <p id="nombrePruebaResultado"></p>
+    <h3>Registro diario de mediciones</h3>
 
-    <h3>Prueba de Grubbs</h3>
+    <p class="descripcion">
+        Introduce las mediciones una por una.
+        Puedes agregar hasta 20 registros.
+    </p>
 
-    <div class="tabla-contenedor">
+    <!-- Contador de mediciones -->
+    <p id="contadorMedicionesDiarias">
+        Mediciones capturadas: 0 de 20
+    </p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Parámetro</th>
-                    <th>Cálculo</th>
-                    <th>Resultado</th>
-                    <th>Unidades</th>
-                </tr>
-            </thead>
+    <!-- Aquí aparecerán los campos dinámicos -->
+    <div id="contenedorMedicionesDiarias"></div>
 
-            <tbody id="tablaResultados">
-            </tbody>
-        </table>
+    <!-- Botón circular para agregar mediciones -->
+    <div class="contenedor-boton-agregar">
+
+        <button
+            type="button"
+            id="btnAgregarMedicion"
+            class="boton-agregar"
+            aria-label="Agregar otra medición"
+            title="Agregar medición"
+        >
+            +
+        </button>
 
     </div>
 
-    <!-- Interpretación de la prueba -->
-    <div id="interpretacionGrubbs"></div>
+    <!-- Guardar registros -->
+    <button
+        type="button"
+        id="btnGuardarMedicionesDiarias"
+    >
+        Guardar mediciones
+    </button>
 
-    <!-- Información sobre valores atípicos -->
-    <div id="informacionAtipicos"></div>
+    <p
+        id="mensajeMedicionesDiarias"
+        aria-live="polite"
+    ></p>
 
-    <!-- Estado actual del análisis -->
-    <div id="estadoAnalisis"></div>
+</div>
+<!-- FIN DEL PANEL DIARIO -->
 
-</section>
+<!-- PANEL REGISTRO COMPLETO -->
+<div id="panelRegistroCompleto" class="panel-pestana">
 
+          <p class="descripcion">
+            Introduce las 20 mediciones con sus respectivas fechas.
+          </p>
 
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr>
+                  <th>N.º</th>
+                  <th>Fecha</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+
+              <tbody id="tablaMediciones"></tbody>
+            </table>
+          </div>
+
+          <button type="button" id="btnAnalizar">Guardar y analizar</button>
+
+          <div id="mensaje" aria-live="polite"></div>
+        </div>
+        </div> <!-- FIN DEL PANEL REGISTRO COMPLETO -->
+      </section>
+
+      <!-- =====================================
+             RESULTADOS DEL ANÁLISIS
+        ====================================== -->
+
+      <section class="tarjeta" id="seccionResultados" hidden>
+        <h2>Resultados del análisis estadístico</h2>
+
+        <p id="nombrePruebaResultado" hidden></p>
+
+        <!-- RESUMEN DEL ANÁLISIS -->
+        <div id="resumenAnalisis" class="resumen-analisis" hidden>
+          <div class="resumen-encabezado">
+            <h3 id="resumenNombrePrueba"></h3>
+            <span id="resumenEstado" class="resumen-estado"></span>
+          </div>
+
+          <p id="resumenDetalles"></p>
+
+          <div class="resumen-indicadores">
+            <div class="resumen-indicador">
+              <span>Válidas</span>
+              <strong id="resumenValidas">0</strong>
+            </div>
+
+            <div class="resumen-indicador">
+              <span>Excluidas</span>
+              <strong id="resumenExcluidas">0</strong>
+            </div>
+
+            <div class="resumen-indicador">
+              <span>Pendientes</span>
+              <strong id="resumenPendientes">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- =====================================
+                 PESTAÑAS DE RESULTADOS
+            ====================================== -->
+
+        <div class="pestanas" role="tablist" aria-label="Tipos de análisis">
+          <button
+            type="button"
+            id="tabGrubbs"
+            class="pestana activa"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panelGrubbs"
+          >
+            Grubbs
+          </button>
+
+          <button
+            type="button"
+            id="tabLevey"
+            class="pestana"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panelLevey"
+          >
+            Levey-Jennings
+          </button>
+
+          <button
+            type="button"
+            id="tabWestgard"
+            class="pestana"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panelWestgard"
+          >
+            Westgard
+          </button>
+        </div>
+
+        <!-- =====================================
+                 PANEL 1: GRUBBS
+            ====================================== -->
+
+        <div
+          id="panelGrubbs"
+          class="panel-pestana"
+          role="tabpanel"
+          aria-labelledby="tabGrubbs"
+        >
+          <h3>Prueba de Grubbs</h3>
+
+          <p class="descripcion">
+            Resultados estadísticos, identificación de valores atípicos y
+            revisión documentada.
+          </p>
+
+          <!-- TABLA DE CÁLCULOS -->
+          <div class="tabla-contenedor">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parámetro</th>
+                  <th>Cálculo</th>
+                  <th>Resultado</th>
+                  <th>Unidades</th>
+                </tr>
+              </thead>
+
+              <tbody id="tablaResultados"></tbody>
+            </table>
+          </div>
+
+          <!-- INTERPRETACIÓN -->
+          <div id="interpretacionGrubbs"></div>
+
+          <div id="informacionAtipicos"></div>
+
+          <!-- =====================================
+                     REVISIÓN DE VALORES ATÍPICOS
+                ====================================== -->
+
+          <div id="formularioRevision" class="subtarjeta" hidden>
+            <h3>Revisión de posible valor atípico</h3>
+
+            <p>
+              Valor sospechoso:
+              <strong id="valorSospechosoRevision"></strong>
+            </p>
+
+            <p>
+              Fecha:
+              <strong id="fechaSospechosaRevision"></strong>
+            </p>
+
+            <div class="campo">
+              <label for="observacionesRevision">
+                Observaciones de la investigación
+              </label>
+
+              <textarea
+                id="observacionesRevision"
+                rows="4"
+                placeholder="Describe los hallazgos de la investigación"
+              ></textarea>
+            </div>
+
+            <div class="campo">
+              <label for="motivoExclusion"> Motivo técnico de exclusión </label>
+
+              <textarea
+                id="motivoExclusion"
+                rows="3"
+                placeholder="Completar únicamente si se decide excluir"
+              ></textarea>
+            </div>
+
+            <div class="campo">
+              <label for="autorizadoPor"> Exclusión autorizada por </label>
+
+              <input
+                type="text"
+                id="autorizadoPor"
+                placeholder="Nombre del responsable"
+              />
+            </div>
+
+            <div class="grupo-botones">
+              <button type="button" id="btnConservar">
+                Conservar medición
+              </button>
+
+              <button type="button" id="btnExcluir">Excluir medición</button>
+            </div>
+
+            <p id="mensajeRevision" aria-live="polite"></p>
+          </div>
+
+          <!-- ESTADO DEL ANÁLISIS -->
+          <div id="estadoAnalisis"></div>
+
+          <!-- =====================================
+                     MEDICIÓN DE REEMPLAZO
+                ====================================== -->
+
+          <div id="formularioReemplazo" class="subtarjeta" hidden>
+            <h3>Registrar medición de reemplazo</h3>
+
+            <p id="resumenReemplazo">
+              Se necesita una medición adicional para completar las 20
+              mediciones válidas.
+            </p>
+
+            <div class="campo">
+              <label for="fechaReemplazo"> Fecha de la nueva medición </label>
+
+              <input type="date" id="fechaReemplazo" />
+            </div>
+
+            <div class="campo">
+              <label for="valorReemplazo"> Valor de la nueva medición </label>
+
+              <input
+                type="number"
+                id="valorReemplazo"
+                step="any"
+                placeholder="Ej. 101"
+              />
+            </div>
+
+            <button type="button" id="btnGuardarReemplazo">
+              Guardar medición de reemplazo
+            </button>
+
+            <p id="mensajeReemplazo" aria-live="polite"></p>
+          </div>
+
+          <!-- =====================================
+                     REEVALUACIÓN DE GRUBBS
+                ====================================== -->
+
+          <div id="seccionReevaluacion" class="subtarjeta" hidden>
+            <h3>Reevaluación de la prueba de Grubbs</h3>
+
+            <p class="descripcion">
+              Se analizarán las 20 mediciones candidatas, sin incluir las
+              mediciones excluidas.
+            </p>
+
+            <button type="button" id="btnReevaluarGrubbs">
+              Reevaluar prueba de Grubbs
+            </button>
+
+            <p id="mensajeReevaluacion" aria-live="polite"></p>
+
+            <div id="resultadosReevaluacion" hidden>
+              <h4>Resultados de la reevaluación</h4>
+
+              <div class="tabla-contenedor">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Parámetro</th>
+                      <th>Cálculo</th>
+                      <th>Resultado</th>
+                      <th>Unidades</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="tablaReevaluacion"></tbody>
+                </table>
+              </div>
+
+              <p id="interpretacionReevaluacion"></p>
+            </div>
+          </div>
+        </div>
+        <!-- FIN DEL PANEL GRUBBS -->
+
+        <!-- =====================================
+                 PANEL 2: LEVEY-JENNINGS
+            ====================================== -->
+
+        <div
+          id="panelLevey"
+          class="panel-pestana"
+          role="tabpanel"
+          aria-labelledby="tabLevey"
+          hidden
+        >
+          <h3>Gráfica de Levey-Jennings</h3>
+
+          <p class="descripcion">
+            Representación de las 20 mediciones válidas, utilizando la media
+            objetivo y los límites de desviación estándar.
+          </p>
+
+          <div id="seccionGraficaLevey" hidden>
+            <img
+              id="imagenGraficaLevey"
+              alt="Gráfica de control Levey-Jennings"
+              style="width: 100%; max-width: 1100px; height: auto"
+            />
+
+            <p id="mensajeGraficaLevey" aria-live="polite"></p>
+          </div>
+        </div>
+        <!-- FIN DEL PANEL LEVEY-JENNINGS -->
+
+        <!-- =====================================
+                 PANEL 3: WESTGARD
+            ====================================== -->
+
+        <div
+          id="panelWestgard"
+          class="panel-pestana"
+          role="tabpanel"
+          aria-labelledby="tabWestgard"
+          hidden
+        >
+          <h3>Reglas de Westgard</h3>
+
+          <p class="descripcion">
+            En esta sección mostraremos las reglas de control de calidad, las
+            alertas y la interpretación de los resultados.
+          </p>
+
+          <p>
+            Esta funcionalidad se implementará después de completar la interfaz
+            web.
+          </p>
+        </div>
+        <!-- FIN DEL PANEL WESTGARD -->
+      </section>
+      <!-- FIN DE RESULTADOS -->
     </main>
 
+    <!-- JAVASCRIPT -->
     <script src="app.js"></script>
-
-</body>
+  </body>
 </html>

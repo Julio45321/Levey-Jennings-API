@@ -1,113 +1,706 @@
+
+/* =====================================
+   ESTILOS GENERALES
+===================================== */
+
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+  box-sizing: border-box;
 }
 
-body{
-    font-family: Arial, Helvetica, sans-serif;
-    background: #f1f5f9;
-    color: #1e293b;
+body {
+  margin: 0;
+  padding: 30px 16px;
+  background: #f3f6fa;
+  color: #243447;
+  font-size: 14px;
+  line-height: 1.6;
 }
 
-.encabezado{
-    background: #123b5d;
-    color: white;
-    padding: 30px 20px;
-    text-align: center;
+[hidden] {
+  display: none !important;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* =====================================
+   TARJETAS
+===================================== */
+
+.tarjeta {
+  background: #ffffff;
+  border: 1px solid #e0e7ef;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 16px rgba(25, 55, 85, 0.06);
+}
+
+.bloque {
+  padding: 24px 0;
+  border-bottom: 1px solid #e6ebf1;
+}
+
+.bloque:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.subtarjeta {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #dce5ee;
+  border-radius: 10px;
+}
+
+/* =====================================
+   ENCABEZADO
+===================================== */
+
+.encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e6ebf1;
 }
 
 .encabezado h1 {
-    font-size: 30px;
-    margin-bottom: 8px;
+  margin: 0;
+  color: #123b5d;
+  font-size: 25px;
 }
 
-.encabezado p{
-    color: #dbeafe;
+.encabezado p {
+  margin: 5px 0 0;
+  color: #687b8e;
+  font-size: 13px;
 }
 
-.contenedor{
-    max-width: 950px;
-    margin: 35px auto;
-    padding: 0 20px;
+.icono-laboratorio {
+  color: #1976b9;
+  font-size: 28px;
 }
 
-.tarjeta{
-    background: white;
-    padding: 30px;
+/* =====================================
+   TÍTULOS
+===================================== */
+
+h2 {
+  margin: 0 0 12px;
+  color: #123b5d;
+  font-size: 19px;
+}
+
+h3 {
+  margin: 16px 0 10px;
+  color: #20577e;
+  font-size: 16px;
+}
+
+h4 {
+  margin: 14px 0 8px;
+  color: #20577e;
+}
+
+.descripcion {
+  margin: 6px 0 17px;
+  color: #65788b;
+  font-size: 13px;
+}
+
+.titulo-bloque {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.titulo-bloque span {
+  color: #73869a;
+  font-size: 12px;
+}
+
+/* =====================================
+   FORMULARIOS
+===================================== */
+
+.campo {
+  margin-bottom: 16px;
+}
+
+.campo label {
+  display: block;
+  margin-bottom: 6px;
+  color: #334c62;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #cbd7e3;
+  border-radius: 8px;
+  color: #243447;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #91a0af;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: #1976b9;
+  box-shadow: 0 0 0 3px rgba(25, 118, 185, 0.12);
+}
+
+textarea {
+  resize: vertical;
+}
+
+/* =====================================
+   BOTONES
+===================================== */
+
+button {
+  padding: 12px 18px;
+  background: #1976b9;
+  border: 1px solid #1976b9;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #125c91;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+#btnBuscarAnalisis,
+#btnAnalizar,
+#btnGuardarReemplazo,
+#btnReevaluarGrubbs {
+  width: 100%;
+}
+
+.grupo-botones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.grupo-botones button {
+  flex: 1;
+}
+
+#btnExcluir {
+  background: #c74747;
+  border-color: #c74747;
+}
+
+#btnExcluir:hover {
+  background: #a83232;
+}
+
+/* =====================================
+   TABLAS
+===================================== */
+
+.tabla-contenedor {
+  width: 100%;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid #dce5ee;
+  border-radius: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e5ebf1;
+}
+
+th {
+  background: #eaf2f9;
+  color: #174b70;
+  font-weight: 700;
+}
+
+td {
+  color: #34495e;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #f4f9fd;
+}
+
+td input {
+  min-width: 125px;
+}
+
+/* =====================================
+   RECUPERAR ANÁLISIS
+===================================== */
+
+#listaAnalisis {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f6f9fc;
+  border: 1px solid #dce5ee;
+  border-radius: 10px;
+}
+
+#resultadosBusqueda {
+  display: grid;
+  gap: 10px;
+}
+
+#resultadosBusqueda button {
+  text-align: left;
+}
+
+/* =====================================
+   RESULTADOS
+===================================== */
+
+.encabezado-resultados {
+  margin-bottom: 20px;
+}
+
+.encabezado-resultados h2 {
+  margin-bottom: 5px;
+}
+
+#nombrePruebaResultado {
+  margin: 0;
+  color: #65788b;
+}
+
+#estadoAnalisis {
+  margin: 15px 0;
+  padding: 13px;
+  background: #edf5fb;
+  border-left: 4px solid #1976b9;
+  border-radius: 6px;
+  color: #174b70;
+  font-weight: 600;
+}
+
+#interpretacionGrubbs,
+#informacionAtipicos {
+  margin-top: 14px;
+  padding: 13px;
+  background: #f6f9fc;
+  border: 1px solid #e3ebf3;
+  border-radius: 8px;
+}
+
+/* =====================================
+   PESTAÑAS
+===================================== */
+
+.pestanas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 20px 0;
+  padding: 5px;
+  background: #edf2f7;
+  border-radius: 10px;
+}
+
+.pestana {
+  width: 100%;
+  padding: 11px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #52718c;
+  font-size: 13px;
+}
+
+.pestana:hover {
+  background: #dceaf5;
+}
+
+.pestana.activa {
+  background: #1976b9;
+  color: #ffffff;
+}
+
+.panel-pestana {
+  padding-top: 8px;
+}
+
+/* =====================================
+   LEVEY-JENNINGS
+===================================== */
+
+#seccionGraficaLevey {
+  margin-top: 18px;
+}
+
+#imagenGraficaLevey {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #ffffff;
+  border: 1px solid #dce5ee;
+  border-radius: 10px;
+}
+
+#mensajeGraficaLevey {
+  margin-top: 12px;
+}
+
+/* =====================================
+   MENSAJES
+===================================== */
+
+#mensaje,
+#mensajeBusqueda,
+#mensajeRecuperacion,
+#mensajeRevision,
+#mensajeReemplazo,
+#mensajeReevaluacion {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}
+
+/* =====================================
+   DISEÑO RESPONSIVO
+===================================== */
+
+@media (max-width: 600px) {
+  body {
+    padding: 12px;
+  }
+
+  .tarjeta {
+    padding: 16px;
+  }
+
+  .encabezado h1 {
+    font-size: 20px;
+  }
+
+  .pestana {
+    padding: 10px 4px;
+    font-size: 11px;
+  }
+
+  th,
+  td {
+    padding: 9px 8px;
+    font-size: 12px;
+  }
+
+  .grupo-botones {
+    flex-direction: column;
+  }
+}
+
+
+/* ==========================================
+   RESUMEN DEL ANÁLISIS
+========================================== */
+
+.resumen-analisis {
+    background: #f8fbff;
+    border: 1px solid #dbe7f3;
     border-radius: 12px;
-    box-shadow: 0px 4px 15px rgba(0,0,0,0.07);
+    padding: 22px;
+    margin: 22px 0;
 }
 
-.tarjeta h2 {
-    color: #123b5d;
-    margin-bottom: 25px;
+/* Nombre y estado */
+
+.resumen-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
 }
 
-.tarjeta h3{
-    margin: 25px 0 10px; 
+.resumen-encabezado h3 {
+    color: #174a78;
+    font-size: 19px;
+    margin: 0;
 }
 
-.campo{
+.resumen-estado {
+    background: #e5f4e9;
+    color: #237a3b;
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Detalles del análisis */
+
+#resumenDetalles {
+    color: #61758a;
+    font-size: 14px;
     margin-bottom: 20px;
 }
 
-.campo label{
-    display: block;
-    font-weight: bold;
-    margin-bottom: 8px;
+/* Indicadores */
+
+.resumen-indicadores {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
 }
 
-.campo input {
+.resumen-indicador {
+    background: #ffffff;
+    border: 1px solid #e0eaf3;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.resumen-indicador span {
+    font-size: 13px;
+    color: #667b90;
+}
+
+.resumen-indicador strong {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1769aa;
+}
+
+/* Respetar elementos ocultos */
+
+.resumen-analisis[hidden] {
+    display: none !important;
+}
+
+/* Adaptación a teléfonos */
+
+@media (max-width: 600px) {
+
+    .resumen-analisis {
+        padding: 15px;
+    }
+
+    .resumen-indicadores {
+        gap: 8px;
+    }
+
+    .resumen-indicador {
+        padding: 12px 6px;
+    }
+
+    .resumen-indicador strong {
+        font-size: 23px;
+    }
+
+    .resumen-indicador span {
+        font-size: 11px;
+    }
+}
+
+#nombrePruebaResultado {
+    display: none !important;
+}
+
+
+/* ==========================================
+   MODALIDADES DE CAPTURA DE MEDICIONES
+========================================== */
+
+/* Contador de mediciones */
+
+#contadorMedicionesDiarias {
+    background: #eef6fc;
+    color: #1769aa;
+    border: 1px solid #d5e7f5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 18px 0;
+}
+
+/* Contenedor de registros diarios */
+
+#contenedorMedicionesDiarias {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Cada medición agregada */
+
+.medicion-diaria {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 14px;
+
+    background: #f8fbff;
+    border: 1px solid #dbe7f3;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.medicion-diaria .campo {
+    margin-bottom: 0;
+}
+
+.medicion-diaria input {
     width: 100%;
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 16px;
+    box-sizing: border-box;
 }
 
-.descripcion{
-    color: #64748b;
-    margin-bottom: 15px;
-}
+/* Botón para eliminar una fila */
 
-.tabla-contenedor{
-    overflow-x: auto;
-}
-
-table{
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td{
-    padding: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-th{
-    background: #eaf2f8;
-    color: #123b5d;
-}
-
-button{
-    margin-top: 15px;
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 7px;
-    background: #087e8b;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
+.boton-eliminar-medicion {
+    background: #fff0f0;
+    color: #b42318;
+    border: 1px solid #f5c9c9;
+    border-radius: 8px;
+    padding: 10px 14px;
     cursor: pointer;
 }
 
-button:hover{
-    background: #066570;
+.boton-eliminar-medicion:hover {
+    background: #ffe0e0;
 }
 
-#mensaje{
-    margin-top: 15px;
-    font-weight: bold;
+/* ==========================================
+   BOTÓN CIRCULAR +
+========================================== */
+
+.contenedor-boton-agregar {
+    display: flex;
+    justify-content: center;
+    margin: 22px 0;
+}
+
+.boton-agregar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+
+    background: #1976b9;
+    color: #ffffff;
+    border: none;
+
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.boton-agregar:hover {
+    background: #125d94;
+    transform: scale(1.08);
+}
+
+.boton-agregar:disabled {
+    background: #a9bac9;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Mensajes de registro */
+
+#mensajeMedicionesDiarias {
+    font-size: 14px;
+    margin-top: 14px;
+}
+
+/* ==========================================
+   ADAPTACIÓN A DISPOSITIVOS MÓVILES
+========================================== */
+
+@media (max-width: 600px) {
+
+    .medicion-diaria {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .boton-eliminar-medicion {
+        width: 100%;
+    }
+
+    .boton-agregar {
+        width: 48px;
+        height: 48px;
+    }
+}
+
+
+/* ==========================================
+   PESTAÑAS DE MEDICIONES AL 50%
+========================================== */
+
+#tabDiario,
+#tabRegistroCompleto {
+    flex: 1 1 0;
+    width: 50%;
+    min-width: 0;
+    text-align: center;
+}
+
+/* Contenedor de ambas pestañas */
+.pestanas:has(#tabDiario) {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 4px;
 }

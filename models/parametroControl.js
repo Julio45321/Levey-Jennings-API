@@ -31,7 +31,18 @@ const parametroControlSchema = new mongoose.Schema({
     desviacionEstandar: {
         type: Number,
         required: true
-    }
+    },
+    analisisOrigenId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Analisis',
+    default: null
+},
+
+estado: {
+    type: String,
+    enum: ['pendiente_validacion', 'validado'],
+    default: 'pendiente_validacion'
+}
 
 }, {
     timestamps: true
