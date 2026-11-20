@@ -43,7 +43,7 @@
               autocomplete="off"
             />
           </div>
-
+  
           <button type="button" id="btnBuscarAnalisis">Buscar análisis</button>
 
           <p id="mensajeBusqueda" aria-live="polite"></p>
@@ -74,117 +74,317 @@
           </div>
         </div>
 
+          <!-- CONFIGURACIÓN DE NIVELES DE CONTROL -->
+          <div class="campo">
+            <label>Niveles de control</label>
+
+            <button type="button" id="btnConfigurarNiveles">
+              Configurar niveles
+            </button>
+
+            <p id="resumenNiveles">No se han configurado niveles de control.</p>
+          </div>
+
+          <!-- =====================================
+     DATOS DE LA CORRIDA DE CONTROL
+===================================== -->
+
+<div class="campo">
+    <label for="loteControl">Lote</label>
+
+    <input
+        type="text"
+        id="loteControl"
+        placeholder="Ej. LOTE-001"
+        autocomplete="off"
+    />
+</div>
+
+<div class="campo">
+    <label for="equipoControl">Equipo</label>
+
+    <input
+        type="text"
+        id="equipoControl"
+        placeholder="Ej. Analizador 01"
+        autocomplete="off"
+    />
+</div>
+
+<div class="campo">
+    <label for="medicionesPorNivel">
+        Mediciones por nivel
+    </label>
+
+    <select id="medicionesPorNivel">
+        <option value="1">1 medición por nivel</option>
+        <option value="2">2 mediciones por nivel</option>
+    </select>
+</div>
+
+<div class="campo">
+    <label for="fechaCorrida">Fecha de la corrida</label>
+
+    <input
+        type="date"
+        id="fechaCorrida"
+    />
+</div>
+
+<!-- RESUMEN PARA WESTGARD -->
+<div class="campo">
+    <p id="resumenEstrategiaWestgard">
+        Configura los niveles para calcular N.
+    </p>
+</div>
+
+
+
+          <!-- MODAL PARA CONFIGURAR NIVELES DE CONTROL -->
+          <div id="modalNiveles" class="modal-niveles" hidden>
+            <div class="modal-niveles-contenido">
+              <h3>Configurar niveles de control</h3>
+
+              <p>Selecciona los niveles utilizados para esta prueba.</p>
+
+              <!-- CONTENEDOR DE NIVELES -->
+              <div id="contenedorNiveles">
+                <!-- NIVEL 1 -->
+                <div class="campo">
+                  <label for="tipoNivel1">Nivel 1</label>
+
+                  <select id="tipoNivel1" class="select-nivel">
+                    <option value="bajo">Bajo</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="alto">Alto</option>
+                  </select>
+                </div>
+
+                <!-- NIVEL 2 -->
+                <div class="campo">
+                  <label for="tipoNivel2">Nivel 2</label>
+
+                  <select id="tipoNivel2" class="select-nivel">
+                    <option value="bajo">Bajo</option>
+                    <option value="normal">Normal</option>
+                    <option value="alto" selected>Alto</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- AGREGAR TERCER NIVEL -->
+              <button type="button" id="btnAgregarNivel">
+                + Agregar nivel
+              </button>
+
+              <!-- ACCIONES DEL MODAL -->
+              <div class="grupo-botones">
+                <button type="button" id="btnCancelarNiveles">Cancelar</button>
+
+                <button type="button" id="btnGuardarNiveles">
+                  Guardar niveles
+                </button>
+              </div>
+            </div>
+          </div>
+
         <!-- MEDICIONES DE CONTROL -->
         <div class="bloque">
           <h2>Mediciones de control</h2>
 
+          <!-- PESTAÑAS DE CAPTURA -->
+          <div class="pestanas">
+            <button
+              type="button"
+              id="tabDiario"
+              class="pestana"
+              aria-selected="false"
+            >
+              Diario
+            </button>
 
-<!-- PESTAÑAS DE CAPTURA -->
-<div class="pestanas">
+            <button
+              type="button"
+              id="tabRegistroCompleto"
+              class="pestana activa"
+              aria-selected="true"
+            >
+              Registro completo
+            </button>
+          </div>
 
-    <button
-        type="button"
-        id="tabDiario"
-        class="pestana"
-        aria-selected="false"
-    >
-        Diario
-    </button>
-
-    <button
-        type="button"
-        id="tabRegistroCompleto"
-        class="pestana activa"
-        aria-selected="true"
-    >
-        Registro completo
-    </button>
-
-</div>
-
-
-<!-- =====================================
+          <!-- =====================================
      PANEL DE REGISTRO DIARIO
 ====================================== -->
 
+          <div id="panelDiario" class="panel-pestana" hidden>
+            <h3>Registro diario de mediciones</h3>
+
+            <!-- =====================================
+     RESULTADOS POR NIVEL DE CONTROL
+===================================== -->
+
 <div
-    id="panelDiario"
-    class="panel-pestana"
+    id="seccionResultadosPorNivel"
+    class="bloque"
     hidden
 >
-
-    <h3>Registro diario de mediciones</h3>
+    <h3>Resultados de la corrida</h3>
 
     <p class="descripcion">
-        Introduce las mediciones una por una.
-        Puedes agregar hasta 20 registros.
+        Introduce los resultados obtenidos para
+        cada nivel de control.
     </p>
 
-    <!-- Contador de mediciones -->
-    <p id="contadorMedicionesDiarias">
-        Mediciones capturadas: 0 de 20
-    </p>
+    <!-- Los campos se crearán con JavaScript -->
+    <div id="contenedorResultadosPorNivel"></div>
 
-    <!-- Aquí aparecerán los campos dinámicos -->
-    <div id="contenedorMedicionesDiarias"></div>
+    <!-- BOTÓN PARA GUARDAR LA CORRIDA -->
+<div class="acciones-corrida">
 
-    <!-- Botón circular para agregar mediciones -->
-    <div class="contenedor-boton-agregar">
-
-        <button
-            type="button"
-            id="btnAgregarMedicion"
-            class="boton-agregar"
-            aria-label="Agregar otra medición"
-            title="Agregar medición"
-        >
-            +
-        </button>
-
-    </div>
-
-    <!-- Guardar registros -->
     <button
         type="button"
-        id="btnGuardarMedicionesDiarias"
+        id="btnGuardarCorrida"
+        class="boton-guardar-corrida"
     >
-        Guardar mediciones
+        Guardar corrida
     </button>
 
     <p
-        id="mensajeMedicionesDiarias"
+        id="mensajeGuardarCorrida"
         aria-live="polite"
     ></p>
 
 </div>
-<!-- FIN DEL PANEL DIARIO -->
 
-<!-- PANEL REGISTRO COMPLETO -->
-<div id="panelRegistroCompleto" class="panel-pestana">
+</div>
 
-          <p class="descripcion">
-            Introduce las 20 mediciones con sus respectivas fechas.
-          </p>
+            <p class="descripcion">
+              Introduce las mediciones una por una. Puedes agregar hasta 20
+              registros.
+            </p>
 
-          <div class="tabla-contenedor">
-            <table>
-              <thead>
-                <tr>
-                  <th>N.º</th>
-                  <th>Fecha</th>
-                  <th>Valor</th>
-                </tr>
-              </thead>
+            <div id="registroDiarioAnterior">
+            <!-- Contador de mediciones -->
+            <p id="contadorMedicionesDiarias">Mediciones capturadas: 0 de 20</p>
 
-              <tbody id="tablaMediciones"></tbody>
-            </table>
+            <!-- Aquí aparecerán los campos dinámicos -->
+            <div id="contenedorMedicionesDiarias"></div>
+
+            <!-- Botón circular para agregar mediciones -->
+            <div class="contenedor-boton-agregar">
+              <button
+                type="button"
+                id="btnAgregarMedicion"
+                class="boton-agregar"
+                aria-label="Agregar otra medición"
+                title="Agregar medición"
+              >
+                +
+              </button>
+            </div>
+
+            <!-- Guardar registros -->
+            <button type="button" id="btnGuardarMedicionesDiarias">
+              Guardar mediciones
+            </button>
+
+            </div>
+<!-- FIN DEL REGISTRO DIARIO ANTERIOR -->
+
+            <button
+              type="button"
+              id="btnNuevoRegistroDiario"
+              class="btn-nuevo-registro"
+            >
+              Nuevo registro diario
+            </button>
+
+            <p id="mensajeMedicionesDiarias" aria-live="polite" hidden></p>
+
+            <!-- Tarjeta de progreso del análisis diario -->
+            <div
+              id="tarjetaProgresoDiario"
+              class="tarjeta-progreso-diario"
+              hidden
+            >
+              <h3 id="nombreAnalitoDiario"></h3>
+
+              <p id="estadoAnalitoDiario"></p>
+
+              <div class="tarjeta-progreso-texto">
+                <span>Progreso de mediciones</span>
+                <strong id="cantidadProgresoDiario">0/20</strong>
+              </div>
+
+              <div class="barra-progreso">
+                <div
+                  id="barraProgresoDiario"
+                  class="barra-progreso-relleno"
+                  style="width: 0%"
+                ></div>
+              </div>
+
+              <div class="acciones-progreso-diario">
+                <span id="faltantesProgresoDiario">
+                  20 mediciones faltantes
+                </span>
+
+                <button
+                  type="button"
+                  id="btnConsultarMediciones"
+                  class="btn-seleccionar"
+                >
+                  Consultar mediciones
+                </button>
+              </div>
+
+              <!-- Tabla de mediciones guardadas -->
+              <div id="panelConsultaMediciones" hidden>
+                <h4>Mediciones registradas</h4>
+
+                <table>
+                  <thead>
+                    <tr>
+                      <th>N.º</th>
+                      <th>Fecha</th>
+                      <th>Valor</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="tablaConsultaMediciones"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
+          <!-- FIN DEL PANEL DIARIO -->
 
-          <button type="button" id="btnAnalizar">Guardar y analizar</button>
+          <!-- PANEL REGISTRO COMPLETO -->
+          <div id="panelRegistroCompleto" class="panel-pestana">
+            <p class="descripcion">
+              Introduce las 20 mediciones con sus respectivas fechas.
+            </p>
 
-          <div id="mensaje" aria-live="polite"></div>
+            <div class="tabla-contenedor">
+              <table>
+                <thead>
+                  <tr>
+                    <th>N.º</th>
+                    <th>Fecha</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+
+                <tbody id="tablaMediciones"></tbody>
+              </table>
+            </div>
+
+            <button type="button" id="btnAnalizar">Guardar y analizar</button>
+
+            <div id="mensaje" aria-live="polite"></div>
+          </div>
         </div>
-        </div> <!-- FIN DEL PANEL REGISTRO COMPLETO -->
+        <!-- FIN DEL PANEL REGISTRO COMPLETO -->
       </section>
 
       <!-- =====================================

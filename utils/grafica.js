@@ -84,49 +84,49 @@ const fechas = resultados.map(r =>
   tension: 0
 },
         {
-          label: '+3 DE',
+          label: `+3 DE (${limites.mas3DE})`,
           data: linea(limites.mas3DE),
           borderColor: '#dc2626',
           borderDash: [6, 4],
           pointRadius: 0
         },
         {
-          label: '+2 DE',
+          label: `+2 DE (${limites.mas2DE})`,
           data: linea(limites.mas2DE),
           borderColor: '#f59e0b',
           borderDash: [6, 4],
           pointRadius: 0
         },
         {
-          label: '+1 DE',
+          label: `+1 DE (${limites.mas1DE})`,
           data: linea(limites.mas1DE),
           borderColor: '#94a3b8',
           borderDash: [4, 4],
           pointRadius: 0
         },
         {
-          label: 'Media',
+          label: `Media (${limites.media})`,
           data: linea(media),
           borderColor: '#16a34a',
           borderWidth: 2,
           pointRadius: 0
         },
         {
-          label: '-1 DE',
+          label: `-1 DE (${limites.menos1DE})`,
           data: linea(limites.menos1DE),
           borderColor: '#94a3b8',
           borderDash: [4, 4],
           pointRadius: 0
         },
         {
-          label: '-2 DE',
+          label: `-2 DE (${limites.menos2DE})`,
           data: linea(limites.menos2DE),
           borderColor: '#f59e0b',
           borderDash: [6, 4],
           pointRadius: 0
         },
         {
-          label: '-3 DE',
+          label: `-3 DE (${limites.menos3DE})`,
           data: linea(limites.menos3DE),
           borderColor: '#dc2626',
           borderDash: [6, 4],
@@ -150,12 +150,26 @@ const fechas = resultados.map(r =>
         }
       },
       scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Fecha de procesamiento'
-          }
-        },
+        
+x: {
+  title: {
+    display: true,
+    text: 'Fecha de procesamiento',
+    font: {
+      size: 16,
+      weight: 'bold'
+    }
+  },
+  ticks: {
+    autoSkip: false,
+    maxRotation: 60,
+    minRotation: 60,
+    font: {
+      size: 12
+    }
+  }
+},
+
         y: {
           title: {
             display: true,

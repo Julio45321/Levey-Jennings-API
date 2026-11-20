@@ -112,15 +112,16 @@ function pruebaGrubbs(mediciones, nivelSignificancia = 0.05) {
     ladoSospechoso,
     hayEmpate,
 
-    estadisticoG: Number(G.toFixed(4)),
-    valorCritico: Number(Gcritico.toFixed(4)),
+estadisticoG: G,
+valorCritico: Gcritico,
+
     nivelSignificancia: alfa,
 
-    resultado: hayEmpate
-      ? "Empate entre los extremos: requiere revisión"
-      : esAtipico
-        ? "Posible valor atípico detectado"
-        : "No se detectaron valores atípicos",
+    resultado: !esAtipico
+      ? "No se detectaron valores atípicos"
+      : hayEmpate
+        ? "Empate entre extremos con posible atipicidad: requiere revisión"
+        : "Posible valor atípico detectado",
 
     esAtipico: esAtipico && !hayEmpate,
   };

@@ -51,6 +51,12 @@ const medicionSchema = new mongoose.Schema(
       default: null,
     },
 
+    corridaId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CorridaControl",
+    default: null,
+},
+
     // Estado de la medición
     estado: {
       type: String,
