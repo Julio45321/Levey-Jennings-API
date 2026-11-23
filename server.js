@@ -22,7 +22,6 @@ const conectarDB = require("./config/database");
 
 const PORT = 3000;
 
-
 /**
  * ==========================================
  * REGISTRO DE CORRIDAS DE CONTROL
@@ -30,7 +29,7 @@ const PORT = 3000;
  */
 
 app.post("/api/control/registrar-corrida", async (req, res) => {
-      let session = null;
+  let session = null;
   try {
     // Obtener los datos enviados desde la web
     const {
@@ -41,9 +40,8 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       numeroNiveles,
       medicionesPorNivel,
       N,
-      mediciones
+      mediciones,
     } = req.body || {};
-
 
     // ==========================================
     // VALIDAR DATOS GENERALES DE LA CORRIDA
@@ -59,7 +57,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       !equipo.trim()
     ) {
       return res.status(400).json({
-        mensaje: "Debes proporcionar prueba, lote y equipo."
+        mensaje: "Debes proporcionar prueba, lote y equipo.",
       });
     }
 
@@ -67,30 +65,27 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
     const fechaValida =
       typeof fechaCorrida === "string" &&
       /^\d{4}-\d{2}-\d{2}$/.test(fechaCorrida) &&
-      !Number.isNaN(
-        Date.parse(`${fechaCorrida}T12:00:00.000Z`)
-      ) &&
-      new Date(`${fechaCorrida}T12:00:00.000Z`)
-        .toISOString()
-        .slice(0, 10) === fechaCorrida;
+      !Number.isNaN(Date.parse(`${fechaCorrida}T12:00:00.000Z`)) &&
+      new Date(`${fechaCorrida}T12:00:00.000Z`).toISOString().slice(0, 10) ===
+        fechaCorrida;
 
     if (!fechaValida) {
       return res.status(400).json({
-        mensaje: "La fecha de la corrida no es válida."
+        mensaje: "La fecha de la corrida no es válida.",
       });
     }
 
     // Validar cantidad de niveles
     if (![2, 3].includes(numeroNiveles)) {
       return res.status(400).json({
-        mensaje: "La corrida debe tener 2 o 3 niveles de control."
+        mensaje: "La corrida debe tener 2 o 3 niveles de control.",
       });
     }
 
     // Validar mediciones por nivel
     if (![1, 2].includes(medicionesPorNivel)) {
       return res.status(400).json({
-        mensaje: "Debe existir 1 o 2 mediciones por nivel."
+        mensaje: "Debe existir 1 o 2 mediciones por nivel.",
       });
     }
 
@@ -99,10 +94,9 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 
     if (N !== nCalculado) {
       return res.status(400).json({
-        mensaje: `El valor de N debe ser ${nCalculado}.`
+        mensaje: `El valor de N debe ser ${nCalculado}.`,
       });
     }
-
 
     // ==========================================
     // VALIDAR MEDICIONES DE CADA NIVEL
@@ -111,7 +105,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
     // Comprobar que recibimos exactamente N mediciones
     if (!Array.isArray(mediciones) || mediciones.length !== N) {
       return res.status(400).json({
-        mensaje: `Debes enviar exactamente ${N} mediciones.`
+        mensaje: `Debes enviar exactamente ${N} mediciones.`,
       });
     }
 
@@ -122,38 +116,30 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 
       if (!medicion || typeof medicion !== "object") {
         return res.status(400).json({
-          mensaje: `La medición ${i + 1} no es válida.`
+          mensaje: `La medición ${i + 1} no es válida.`,
         });
       }
 
-      const {
-        nivelControl,
-        tipoNivel,
-        numeroMedicion,
-        fecha,
-        valor
-      } = medicion;
+      const { nivelControl, tipoNivel, numeroMedicion, fecha, valor } =
+        medicion;
 
       // Validar el nombre del nivel
       const numeroNivel = Number(
         typeof nivelControl === "string"
           ? /^Nivel ([1-3])$/.exec(nivelControl)?.[1]
-          : NaN
+          : NaN,
       );
 
-      if (
-        !Number.isInteger(numeroNivel) ||
-        numeroNivel > numeroNiveles
-      ) {
+      if (!Number.isInteger(numeroNivel) || numeroNivel > numeroNiveles) {
         return res.status(400).json({
-          mensaje: `Nivel de control inválido en la medición ${i + 1}.`
+          mensaje: `Nivel de control inválido en la medición ${i + 1}.`,
         });
       }
 
       // Validar el tipo de nivel
       if (!["bajo", "normal", "alto"].includes(tipoNivel)) {
         return res.status(400).json({
-          mensaje: `Tipo de nivel inválido en la medición ${i + 1}.`
+          mensaje: `Tipo de nivel inválido en la medición ${i + 1}.`,
         });
       }
 
@@ -164,21 +150,21 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
         numeroMedicion > medicionesPorNivel
       ) {
         return res.status(400).json({
-          mensaje: `Número de medición inválido en la posición ${i + 1}.`
+          mensaje: `Número de medición inválido en la posición ${i + 1}.`,
         });
       }
 
       // Validar el resultado numérico
       if (typeof valor !== "number" || !Number.isFinite(valor)) {
         return res.status(400).json({
-          mensaje: `Resultado inválido en la medición ${i + 1}.`
+          mensaje: `Resultado inválido en la medición ${i + 1}.`,
         });
       }
 
       // Validar que la fecha coincida con la corrida
       if (fecha !== fechaCorrida) {
         return res.status(400).json({
-          mensaje: `La fecha de la medición ${i + 1} no coincide con la corrida.`
+          mensaje: `La fecha de la medición ${i + 1} no coincide con la corrida.`,
         });
       }
 
@@ -186,7 +172,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       if (!nivelesEncontrados.has(nivelControl)) {
         nivelesEncontrados.set(nivelControl, {
           tipo: tipoNivel,
-          numeros: new Set()
+          numeros: new Set(),
         });
       }
 
@@ -195,14 +181,14 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       // Un mismo nivel debe conservar su tipo
       if (nivel.tipo !== tipoNivel) {
         return res.status(400).json({
-          mensaje: `El nivel ${nivelControl} tiene tipos diferentes.`
+          mensaje: `El nivel ${nivelControl} tiene tipos diferentes.`,
         });
       }
 
       // No permitir dos mediciones con el mismo número
       if (nivel.numeros.has(numeroMedicion)) {
         return res.status(400).json({
-          mensaje: `La medición ${numeroMedicion} está duplicada en ${nivelControl}.`
+          mensaje: `La medición ${numeroMedicion} está duplicada en ${nivelControl}.`,
         });
       }
 
@@ -212,7 +198,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
     // Comprobar que están presentes todos los niveles
     if (nivelesEncontrados.size !== numeroNiveles) {
       return res.status(400).json({
-        mensaje: `Debes proporcionar los ${numeroNiveles} niveles configurados.`
+        mensaje: `Debes proporcionar los ${numeroNiveles} niveles configurados.`,
       });
     }
 
@@ -221,19 +207,13 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       const nombreNivel = `Nivel ${numero}`;
       const nivel = nivelesEncontrados.get(nombreNivel);
 
-      if (
-        !nivel ||
-        nivel.numeros.size !== medicionesPorNivel
-      ) {
+      if (!nivel || nivel.numeros.size !== medicionesPorNivel) {
         return res.status(400).json({
-          mensaje: `${nombreNivel} debe contener ${medicionesPorNivel} mediciones.`
+          mensaje: `${nombreNivel} debe contener ${medicionesPorNivel} mediciones.`,
         });
       }
     }
 
-
-
-   
     // ==========================================
     // GUARDAR CORRIDA Y MEDICIONES EN MONGODB
     // ==========================================
@@ -246,7 +226,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 
       niveles.push({
         nombre,
-        tipo: nivelesEncontrados.get(nombre).tipo
+        tipo: nivelesEncontrados.get(nombre).tipo,
       });
     }
 
@@ -263,7 +243,7 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       fecha: new Date(`${medicion.fecha}T12:00:00.000Z`),
       corridaId,
       tipoMedicion: "inicial",
-      estado: "valida"
+      estado: "valida",
     }));
 
     // Iniciar sesión y transacción
@@ -272,25 +252,74 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 
     // Guardar los datos generales de la corrida
     const [nuevaCorrida] = await CorridaControl.create(
-      [{
-        _id: corridaId,
-        prueba: prueba.trim(),
-        lote: lote.trim(),
-        equipo: equipo.trim(),
-        fechaCorrida: new Date(`${fechaCorrida}T12:00:00.000Z`),
-        niveles,
-        medicionesPorNivel,
-        N,
-        estado: "registrada"
-      }],
-      { session }
+      [
+        {
+          _id: corridaId,
+          prueba: prueba.trim(),
+          lote: lote.trim(),
+          equipo: equipo.trim(),
+          fechaCorrida: new Date(`${fechaCorrida}T12:00:00.000Z`),
+          niveles,
+          medicionesPorNivel,
+          N,
+          estado: "registrada",
+        },
+      ],
+      { session },
     );
 
     // Guardar las mediciones relacionadas
-    const medicionesGuardadas = await Medicion.insertMany(
-      nuevasMediciones,
-      { session }
-    );
+    const medicionesGuardadas = await Medicion.insertMany(nuevasMediciones, {
+      session,
+    });
+
+    // ==========================================
+    // CONSULTAR PROGRESO DE GRUBBS POR NIVEL
+    // ==========================================
+
+   
+    // consultar el progreso y crear análisis por nivel
+    const progresoGrubbsPorNivel = [];
+
+    for (let numero = 1; numero <= numeroNiveles; numero++) {
+      const nombreNivel = `Nivel ${numero}`;
+
+      // consultar las mediciones disponibles para grubbs
+      const conjunto = await obtenerConjuntoGrubbs({
+        prueba: prueba.trim(),
+        nivelControl: nombreNivel,
+        lote: lote.trim(),
+        equipo: equipo.trim(),
+        session
+      });
+
+      let analisisAutomatico = null;
+
+      // ejecutar grubbs cuando existan 20 mediciones
+      if (conjunto.conjuntoCompleto) {
+        analisisAutomatico = await crearAnalisisGrubbsAutomatico({
+          prueba: prueba.trim(),
+          nivelControl: nombreNivel,
+          lote: lote.trim(),
+          equipo: equipo.trim(),
+          session
+        });
+      }
+
+      // preparar el resultado del nivel
+      progresoGrubbsPorNivel.push({
+        nivelControl: nombreNivel,
+        medicionesAcumuladas: conjunto.totalSeleccionadas,
+        medicionesRequeridas: 20,
+        medicionesFaltantes: Math.max(
+          0,
+          20 - conjunto.totalSeleccionadas
+        ),
+        conjuntoCompleto: conjunto.conjuntoCompleto,
+        analisisAutomatico
+      });
+    }
+
 
     // Confirmar la transacción
     await confirmarTransaccion(session);
@@ -303,10 +332,9 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
       medicionesPorNivel,
       N,
       totalMedicionesGuardadas: medicionesGuardadas.length,
-      estado: nuevaCorrida.estado
+      estado: nuevaCorrida.estado,
+      progresoGrubbsPorNivel,
     });
-
- 
   } catch (error) {
     console.error("Error al registrar la corrida:", error);
 
@@ -316,9 +344,8 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 
     return res.status(500).json({
       mensaje: "Error al procesar la corrida de control.",
-      error: error.message
+      error: error.message,
     });
-
   } finally {
     if (session) {
       if (session.inTransaction()) {
@@ -331,7 +358,6 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
 });
 
 // Endpoint para consultar las mediciones de un nivel específico de una corrida
-
 
 /**
  * ==========================================
@@ -358,18 +384,57 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
       !equipo.trim()
     ) {
       return res.status(400).json({
-        mensaje: "Debes proporcionar prueba, nivelControl, lote y equipo."
+        mensaje: "Debes proporcionar prueba, nivelControl, lote y equipo.",
       });
     }
 
-    // Limpiar espacios y saltos de línea
+    // Limpiar espacios
     const pruebaLimpia = prueba.trim();
     const nivelLimpio = nivelControl.trim();
     const loteLimpio = lote.trim();
     const equipoLimpio = equipo.trim();
 
     // ==========================================
-    // 2. CONSULTAR MEDICIONES EN MONGODB
+    // 2. CONSULTAR ANÁLISIS ACTIVO DEL NIVEL
+    // ==========================================
+
+    const analisisActivo = await Analisis.findOne({
+      prueba: pruebaLimpia,
+      nivelControl: nivelLimpio,
+      lote: loteLimpio,
+      equipo: equipoLimpio,
+      estado: {
+        $in: [
+          "en_recopilacion",
+          "pendiente_revision",
+          "requiere_reemplazo",
+          "requiere_revision_empate",
+        ],
+      },
+    })
+      .select("_id estado medicionesRequeridas totalMedicionesValidas")
+      .lean();
+
+
+    // consultar el último análisis completo del nivel
+    const ultimoAnalisisCompleto = await Analisis.findOne({
+      prueba: pruebaLimpia,
+      nivelControl: nivelLimpio,
+      lote: loteLimpio,
+      equipo: equipoLimpio,
+      estado: "completo"
+    })
+      .sort({ createdAt: -1, _id: -1 })
+      .select(
+        "_id estado media desviacionEstandar coeficienteVariacion " +
+        "totalMediciones totalMedicionesValidas medicionesRequeridas " +
+        "mediciones analisisGrubbs createdAt"
+      )
+      .lean();
+
+
+    // ==========================================
+    // 3. CONSULTAR MEDICIONES EN MONGODB
     // ==========================================
 
     // Buscar mediciones válidas que pertenezcan
@@ -382,13 +447,13 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
       equipo: equipoLimpio,
       estado: "valida",
       corridaId: { $ne: null },
-      analisisId: null
+      analisisId: null,
     })
       .sort({ fecha: 1, _id: 1 })
       .lean();
 
     // ==========================================
-    // 3. CALCULAR PROGRESO PARA GRUBBS
+    // 4. CALCULAR PROGRESO PARA GRUBBS
     // ==========================================
 
     const totalMediciones = mediciones.length;
@@ -396,49 +461,79 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
 
     const medicionesFaltantes = Math.max(
       0,
-      medicionesRequeridas - totalMediciones
+      medicionesRequeridas - totalMediciones,
     );
 
-    const conjuntoCompleto =
-      totalMediciones >= medicionesRequeridas;
+    const conjuntoCompleto = totalMediciones >= medicionesRequeridas;
 
     // ==========================================
-    // 4. PREPARAR CONJUNTO DE 20 MEDICIONES
+    // 5. PREPARAR CONJUNTO DE 20 MEDICIONES
     // ==========================================
 
-    // Seleccionar únicamente las primeras 20
-    const medicionesParaGrubbs = mediciones.slice(
-      0,
-      medicionesRequeridas
-    );
+    const medicionesParaGrubbs = mediciones.slice(0, medicionesRequeridas);
 
-    // Verificar si tenemos 20 mediciones
     const listoParaGrubbs =
       medicionesParaGrubbs.length === medicionesRequeridas;
 
-    // Preparar los datos para la prueba de Grubbs
-    const datosParaGrubbs = medicionesParaGrubbs.map(
-      (medicion) => ({
-        id: medicion._id,
-        fecha: medicion.fecha,
-        valor: medicion.valor
-      })
-    );
+    const datosParaGrubbs = medicionesParaGrubbs.map((medicion) => ({
+      id: medicion._id,
+      fecha: medicion.fecha,
+      valor: medicion.valor,
+    }));
 
     // ==========================================
-    // 5. CONTROL DE EJECUCIÓN DE GRUBBS
+    // 6. CONTROL DE EJECUCIÓN DE GRUBBS
     // ==========================================
 
     let estadoGrubbs = "incompleto";
     let mensajeGrubbs = "";
+    let resultadoGrubbs = null;
 
     if (listoParaGrubbs) {
-      estadoGrubbs = "listo";
+      resultadoGrubbs = pruebaGrubbs(
+        datosParaGrubbs.map((medicion) => ({
+          fecha: medicion.fecha,
+          valor: medicion.valor,
+        })),
+      );
 
-      mensajeGrubbs =
-        "Se completaron las 20 mediciones. " +
-        "El conjunto está listo para ejecutar Grubbs.";
+      // Validar que el cálculo se realizó
+      if (!resultadoGrubbs || resultadoGrubbs.error) {
+        throw new Error(
+          resultadoGrubbs?.error || "No se pudo realizar la prueba de Grubbs.",
+        );
+      }
 
+      estadoGrubbs = "analizado";
+
+      // ==========================================
+      // IDENTIFICAR MEDICIÓN SOSPECHOSA
+      // ==========================================
+
+      if (resultadoGrubbs.esAtipico) {
+        const indice = resultadoGrubbs.indiceSospechoso;
+
+        const medicionSospechosa = datosParaGrubbs[indice];
+
+        if (!medicionSospechosa) {
+          throw new Error("No se pudo identificar la medición sospechosa.");
+        }
+
+        resultadoGrubbs.medicionSospechosa = {
+          id: medicionSospechosa.id,
+          fecha: medicionSospechosa.fecha,
+          valor: medicionSospechosa.valor,
+          nivelControl: nivelLimpio,
+        };
+
+        mensajeGrubbs =
+          "Se detectó un resultado atípico. " +
+          "Es necesario investigar y documentar la medición.";
+      } else {
+        mensajeGrubbs =
+          "Prueba de Grubbs realizada correctamente. " +
+          "No se detectaron resultados atípicos.";
+      }
     } else {
       estadoGrubbs = "incompleto";
 
@@ -448,7 +543,7 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
     }
 
     // ==========================================
-    // 6. DEVOLVER RESULTADOS
+    // 7. DEVOLVER RESULTADOS
     // ==========================================
 
     return res.status(200).json({
@@ -459,7 +554,41 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
       lote: loteLimpio,
       equipo: equipoLimpio,
 
+     
+      // devolver la información del análisis activo
+      analisisActivo: analisisActivo
+        ? {
+            id: analisisActivo._id,
+            estado: analisisActivo.estado,
+            medicionesRequeridas: analisisActivo.medicionesRequeridas,
+            totalMedicionesValidas: analisisActivo.totalMedicionesValidas
+          }
+        : null,
+
+      // devolver el último análisis completo almacenado
+      ultimoAnalisisCompleto: ultimoAnalisisCompleto
+        ? {
+            id: ultimoAnalisisCompleto._id,
+            estado: ultimoAnalisisCompleto.estado,
+            media: ultimoAnalisisCompleto.media,
+            desviacionEstandar:
+              ultimoAnalisisCompleto.desviacionEstandar,
+            coeficienteVariacion:
+              ultimoAnalisisCompleto.coeficienteVariacion,
+            totalMediciones:
+              ultimoAnalisisCompleto.totalMediciones,
+            totalMedicionesValidas:
+              ultimoAnalisisCompleto.totalMedicionesValidas,
+            medicionesRequeridas:
+              ultimoAnalisisCompleto.medicionesRequeridas,
+            mediciones: ultimoAnalisisCompleto.mediciones,
+            analisisGrubbs: ultimoAnalisisCompleto.analisisGrubbs,
+            fechaCreacion: ultimoAnalisisCompleto.createdAt
+          }
+        : null,
+
       totalMediciones,
+
 
       progresoGrubbs: {
         medicionesRequeridas,
@@ -467,35 +596,204 @@ app.get("/api/control/mediciones-por-nivel", async (req, res) => {
         medicionesFaltantes,
         conjuntoCompleto,
         listoParaGrubbs,
-        totalSeleccionadas: medicionesParaGrubbs.length
+        totalSeleccionadas: medicionesParaGrubbs.length,
       },
 
       datosParaGrubbs,
 
       controlGrubbs: {
         estado: estadoGrubbs,
-        mensaje: mensajeGrubbs
+        mensaje: mensajeGrubbs,
+        resultado: resultadoGrubbs,
       },
 
-      mediciones
+      mediciones,
     });
-
   } catch (error) {
-    console.error(
-      "Error al consultar mediciones por nivel:",
-      error
-    );
+    console.error("Error al consultar mediciones por nivel:", error);
 
     return res.status(500).json({
       mensaje: "Error al consultar las mediciones.",
-      error: error.message
+      error: error.message,
     });
   }
 });
 
+/**
+ * ==========================================
+ * PRUEBA TEMPORAL DE GRUBBS CON 20 MEDICIONES
+ * ==========================================
+ */
+
+app.get("/api/control/probar-grubbs-20", async (req, res) => {
+  try {
+    // Datos ficticios para comprobar el cálculo
+    const valores = [
+      100, 101, 99, 102, 98, 100, 101, 99, 102, 100, 98, 101, 100, 99, 102, 101,
+      100, 98, 99, 150,
+    ];
+    // Preparar las 20 mediciones con fechas
+    const mediciones = valores.map((valor, index) => ({
+      fecha: new Date(Date.UTC(2026, 10, index + 1, 12)),
+      valor,
+    }));
+
+    // Ejecutar nuestra función existente
+    const resultadoGrubbs = pruebaGrubbs(mediciones);
+
+    if (resultadoGrubbs.esAtipico) {
+      const indice = resultadoGrubbs.indiceSospechoso;
+
+      const medicionSospechosa = mediciones[indice];
+
+      if (!medicionSospechosa) {
+        throw new Error("No se pudo identificar la medición sospechosa.");
+      }
+
+      resultadoGrubbs.medicionSospechosa = {
+        indice,
+        fecha: medicionSospechosa.fecha,
+        valor: medicionSospechosa.valor,
+      };
+    }
+
+    // ==========================================
+    // GENERAR ALERTA DE RESULTADO ATÍPICO
+    // ==========================================
+
+    let alertaGrubbs = null;
+
+    if (resultadoGrubbs.esAtipico) {
+      const fechaSospechosa = new Date(resultadoGrubbs.fechaValorSospechoso);
+
+      const fechaFormateada = fechaSospechosa
+        .toISOString()
+        .slice(0, 10)
+        .split("-")
+        .reverse()
+        .join("/");
+
+      alertaGrubbs = {
+        tipo: "atipico",
+        fecha: fechaFormateada,
+        valor: resultadoGrubbs.valorSospechoso,
+        mensaje:
+          `Resultado atípico detectado: ${fechaFormateada} - ` +
+          `Valor: ${resultadoGrubbs.valorSospechoso}. ` +
+          "Se requiere investigación y documentación.",
+      };
+    }
+
+    // ==========================================
+    // PREPARAR TABLA DE RESULTADOS DE GRUBBS
+    // ==========================================
+
+    const tablaGrubbs = [
+      {
+        parametro: "Número de mediciones",
+        calculo: "n",
+        resultado: resultadoGrubbs.numeroMediciones,
+        unidades: "datos",
+      },
+      {
+        parametro: "Media aritmética",
+        calculo: "Σxi / n",
+        resultado: resultadoGrubbs.media,
+        unidades: "",
+      },
+      {
+        parametro: "Desviación estándar",
+        calculo: "s",
+        resultado: resultadoGrubbs.desviacionEstandar,
+        unidades: "",
+      },
+      {
+        parametro: "Valor mínimo",
+        calculo: "xmin",
+        resultado: resultadoGrubbs.valorMinimo,
+        unidades: "",
+      },
+      {
+        parametro: "Valor máximo",
+        calculo: "xmax",
+        resultado: resultadoGrubbs.valorMaximo,
+        unidades: "",
+      },
+      {
+        parametro: "Distancia máxima",
+        calculo: "max(|xi - media|)",
+        resultado: resultadoGrubbs.distanciaMaxima,
+        unidades: "",
+      },
+      {
+        parametro: "Estadístico G",
+        calculo: "Distancia máxima / desviación estándar",
+        resultado: resultadoGrubbs.estadisticoG,
+        unidades: "Adimensional",
+      },
+      {
+        parametro: "Valor crítico",
+        calculo: "G crítico (n=20, α=0.05)",
+        resultado: resultadoGrubbs.valorCritico,
+        unidades: "Adimensional",
+      },
+
+      {
+        parametro: "Distancia inferior",
+        calculo: "|Media - valor mínimo|",
+        resultado: resultadoGrubbs.distanciaInferior,
+        unidades: "",
+      },
+      {
+        parametro: "Distancia superior",
+        calculo: "|Valor máximo - media|",
+        resultado: resultadoGrubbs.distanciaSuperior,
+        unidades: "",
+      },
+      {
+        parametro: "Nivel de significancia",
+        calculo: "α",
+        resultado: resultadoGrubbs.nivelSignificancia,
+        unidades: "Adimensional",
+      },
+      {
+        parametro: "Valor sospechoso",
+        calculo: "Valor con mayor distancia absoluta",
+        resultado: resultadoGrubbs.valorSospechoso,
+        unidades: "",
+      },
+      {
+        parametro: "Lado sospechoso",
+        calculo: "Superior o inferior",
+        resultado: resultadoGrubbs.ladoSospechoso,
+        unidades: "",
+      },
+      {
+        parametro: "Resultado de Grubbs",
+        calculo: "G > G crítico",
+        resultado: resultadoGrubbs.resultado,
+        unidades: "",
+      },
+    ];
+
+    return res.status(200).json({
+      mensaje: "Prueba de Grubbs ejecutada correctamente.",
+      totalMediciones: mediciones.length,
+      resultadoGrubbs,
+      tablaGrubbs,
+      alertaGrubbs,
+    });
+  } catch (error) {
+    console.error("Error al probar Grubbs:", error);
+
+    return res.status(500).json({
+      mensaje: "Error al ejecutar la prueba de Grubbs.",
+      error: error.message,
+    });
+  }
+});
 
 // Endpoint para registrar una medición individual
-
 
 app.post("/api/control/registrar", async (req, res) => {
   try {
@@ -727,28 +1025,22 @@ app.post("/api/control/registrar-diario/:analisisId", async (req, res) => {
 
     const fechaMedicion = new Date(`${fecha}T12:00:00.000Z`);
 
-
     // Iniciar una sesión de MongoDB
     session = await mongoose.startSession();
 
     // Iniciar una transacción para proteger el reemplazo
     session.startTransaction();
 
-
     // Consultar nuevamente el análisis dentro de la transacción
-    const analisisEnTransaccion = await Analisis.findById(
-      analisisId
-    ).session(session);
+    const analisisEnTransaccion =
+      await Analisis.findById(analisisId).session(session);
 
     if (!analisisEnTransaccion) {
-      throw new Error(
-        "El análisis ya no existe al iniciar la transacción."
-      );
+      throw new Error("El análisis ya no existe al iniciar la transacción.");
     }
 
     // Utilizar el documento consultado dentro de la transacción
-analisis = analisisEnTransaccion;
-
+    analisis = analisisEnTransaccion;
 
     // Comprobar nuevamente el estado del análisis
     // dentro de la transacción
@@ -756,17 +1048,12 @@ analisis = analisisEnTransaccion;
       await session.abortTransaction();
 
       return res.status(409).json({
-        mensaje:
-          "El análisis ya no está esperando mediciones de reemplazo.",
-        estadoActual: analisis.estado
+        mensaje: "El análisis ya no está esperando mediciones de reemplazo.",
+        estadoActual: analisis.estado,
       });
     }
 
-
-
-
     // Registrar nueva medición
-
 
     // Registrar la medición dentro de la transacción
     const [nuevaMedicion] = await Medicion.create(
@@ -792,9 +1079,8 @@ analisis = analisisEnTransaccion;
           estado: "pendiente_revision",
         },
       ],
-      { session }
+      { session },
     );
-
 
     // Actualizar el análisis
     analisis.mediciones.push({
@@ -850,7 +1136,7 @@ analisis = analisisEnTransaccion;
         analisis.totalMedicionesValidas = totalValidas;
       } else if (resultadoGrubbs.hayEmpate === true) {
         // El resultado requiere revisión antes de finalizar
-       analisis.estado = "requiere_revision_empate";
+        analisis.estado = "requiere_revision_empate";
       } else {
         // Calcular las estadísticas del conjunto inicial
         const valores = medicionesIniciales.map((medicion) => medicion.valor);
@@ -970,42 +1256,34 @@ app.get("/api/control/progreso-diario/:analisisId", async (req, res) => {
   }
 });
 
-
 app.post("/api/control/registrar-lote", async (req, res) => {
   let session = null;
 
   try {
-    const {
-      prueba,
-      nivelControl,
-      lote,
-      equipo,
-      mediciones
-    } = req.body || {};
+    const { prueba, nivelControl, lote, equipo, mediciones } = req.body || {};
 
     // 1. Validar identificación del control
     const identificacion = {
       prueba,
       nivelControl,
       lote,
-      equipo
+      equipo,
     };
 
     if (
       Object.values(identificacion).some(
-        campo => typeof campo !== "string" || !campo.trim()
+        (campo) => typeof campo !== "string" || !campo.trim(),
       )
     ) {
       return res.status(400).json({
-        mensaje:
-          "Debes proporcionar prueba, nivelControl, lote y equipo."
+        mensaje: "Debes proporcionar prueba, nivelControl, lote y equipo.",
       });
     }
 
     // 2. Validar exactamente 20 mediciones
     if (!Array.isArray(mediciones) || mediciones.length !== 20) {
       return res.status(400).json({
-        mensaje: "Debes enviar exactamente 20 mediciones."
+        mensaje: "Debes enviar exactamente 20 mediciones.",
       });
     }
 
@@ -1018,9 +1296,7 @@ app.post("/api/control/registrar-lote", async (req, res) => {
         typeof fecha === "string" &&
         /^\d{4}-\d{2}-\d{2}$/.test(fecha) &&
         Number.isFinite(Date.parse(fecha)) &&
-        new Date(`${fecha}T12:00:00.000Z`)
-          .toISOString()
-          .slice(0, 10) === fecha;
+        new Date(`${fecha}T12:00:00.000Z`).toISOString().slice(0, 10) === fecha;
 
       if (
         !fechaValida ||
@@ -1028,13 +1304,13 @@ app.post("/api/control/registrar-lote", async (req, res) => {
         !Number.isFinite(valor)
       ) {
         return res.status(400).json({
-          mensaje: `La medición ${i + 1} contiene datos inválidos.`
+          mensaje: `La medición ${i + 1} contiene datos inválidos.`,
         });
       }
 
       if (fechas.has(fecha)) {
         return res.status(400).json({
-          mensaje: `La fecha ${fecha} está duplicada.`
+          mensaje: `La fecha ${fecha} está duplicada.`,
         });
       }
 
@@ -1047,13 +1323,13 @@ app.post("/api/control/registrar-lote", async (req, res) => {
     }
 
     // 4. Ordenar cronológicamente
-    const medicionesOrdenadas = [...mediciones].sort(
-      (a, b) => a.fecha.localeCompare(b.fecha)
+    const medicionesOrdenadas = [...mediciones].sort((a, b) =>
+      a.fecha.localeCompare(b.fecha),
     );
 
-    const datosGrubbs = medicionesOrdenadas.map(m => ({
+    const datosGrubbs = medicionesOrdenadas.map((m) => ({
       fecha: new Date(`${m.fecha}T12:00:00.000Z`),
-      valor: m.valor
+      valor: m.valor,
     }));
 
     // 5. Ejecutar Grubbs
@@ -1062,7 +1338,7 @@ app.post("/api/control/registrar-lote", async (req, res) => {
     if (resultadoGrubbs.error) {
       return res.status(422).json({
         mensaje: "No fue posible calcular Grubbs.",
-        error: resultadoGrubbs.error
+        error: resultadoGrubbs.error,
       });
     }
 
@@ -1071,15 +1347,12 @@ app.post("/api/control/registrar-lote", async (req, res) => {
 
     if (
       hayAtipico &&
-      (
-        !Number.isInteger(resultadoGrubbs.indiceSospechoso) ||
+      (!Number.isInteger(resultadoGrubbs.indiceSospechoso) ||
         resultadoGrubbs.indiceSospechoso < 0 ||
-        resultadoGrubbs.indiceSospechoso >= 20
-      )
+        resultadoGrubbs.indiceSospechoso >= 20)
     ) {
       return res.status(422).json({
-        mensaje:
-          "Grubbs detectó un atípico, pero no identificó su posición."
+        mensaje: "Grubbs detectó un atípico, pero no identificó su posición.",
       });
     }
 
@@ -1087,9 +1360,8 @@ app.post("/api/control/registrar-lote", async (req, res) => {
     // el lote para evitar una revisión sin medición identificada.
     if (hayEmpate) {
       return res.status(422).json({
-        mensaje:
-          "Grubbs detectó un empate que requiere revisión.",
-        analisisGrubbs: resultadoGrubbs
+        mensaje: "Grubbs detectó un empate que requiere revisión.",
+        analisisGrubbs: resultadoGrubbs,
       });
     }
 
@@ -1103,87 +1375,78 @@ app.post("/api/control/registrar-lote", async (req, res) => {
       fecha: m.fecha,
       valor: m.valor,
       estado:
-        hayAtipico &&
-        indice === resultadoGrubbs.indiceSospechoso
+        hayAtipico && indice === resultadoGrubbs.indiceSospechoso
           ? "pendiente_revision"
-          : "valida"
+          : "valida",
     }));
 
     const totalValidas = nuevasMediciones.filter(
-      m => m.estado === "valida"
+      (m) => m.estado === "valida",
     ).length;
 
     // 7. Solo calcular estadísticas definitivas
     // cuando no existan mediciones pendientes.
     const estadisticas = hayAtipico
       ? null
-      : calcularEstadisticas(
-          nuevasMediciones.map(m => m.valor)
-        );
+      : calcularEstadisticas(nuevasMediciones.map((m) => m.valor));
 
-    const estado = hayAtipico
-      ? "pendiente_revision"
-      : "completo";
+    const estado = hayAtipico ? "pendiente_revision" : "completo";
 
     // 8. Guardar análisis y mediciones en una transacción
     session = await mongoose.startSession();
     session.startTransaction();
 
-
-const analisisActivo = await Analisis.findOne({
-    ...identificacion,
-    estado: {
+    const analisisActivo = await Analisis.findOne({
+      ...identificacion,
+      estado: {
         $in: [
-            "en_recopilacion",
-            "pendiente_revision",
-            "requiere_reemplazo",
-            "requiere_revision_empate"
-        ]
-    }
-}).session(session);
-
+          "en_recopilacion",
+          "pendiente_revision",
+          "requiere_reemplazo",
+          "requiere_revision_empate",
+        ],
+      },
+    }).session(session);
 
     if (analisisActivo) {
       await session.abortTransaction();
 
       return res.status(409).json({
-        mensaje:
-          "Ya existe un análisis inicial activo para este control.",
-        analisisId: analisisActivo._id
+        mensaje: "Ya existe un análisis inicial activo para este control.",
+        analisisId: analisisActivo._id,
       });
     }
 
-    const resultadoMediciones = await Medicion.insertMany(
-      nuevasMediciones,
-      { session }
-    );
+    const resultadoMediciones = await Medicion.insertMany(nuevasMediciones, {
+      session,
+    });
 
     const [nuevoAnalisis] = await Analisis.create(
-      [{
-        _id: analisisId,
-        ...identificacion,
+      [
+        {
+          _id: analisisId,
+          ...identificacion,
 
-        media: estadisticas?.media ?? null,
-        desviacionEstandar:
-          estadisticas?.desviacionEstandar ?? null,
-        coeficienteVariacion:
-          estadisticas?.coeficienteVariacion ?? null,
+          media: estadisticas?.media ?? null,
+          desviacionEstandar: estadisticas?.desviacionEstandar ?? null,
+          coeficienteVariacion: estadisticas?.coeficienteVariacion ?? null,
 
-        totalMediciones: 20,
-        medicionesRequeridas: 20,
-        totalMedicionesValidas: totalValidas,
+          totalMediciones: 20,
+          medicionesRequeridas: 20,
+          totalMedicionesValidas: totalValidas,
 
-        analisisGrubbs: resultadoGrubbs,
-        estado,
+          analisisGrubbs: resultadoGrubbs,
+          estado,
 
-        mediciones: hayAtipico
-          ? []
-          : resultadoMediciones.map(m => ({
-              fecha: m.fecha,
-              valor: m.valor
-            }))
-      }],
-      { session }
+          mediciones: hayAtipico
+            ? []
+            : resultadoMediciones.map((m) => ({
+                fecha: m.fecha,
+                valor: m.valor,
+              })),
+        },
+      ],
+      { session },
     );
 
     await confirmarTransaccion(session);
@@ -1193,8 +1456,7 @@ const analisisActivo = await Analisis.findOne({
       : null;
 
     return res.status(201).json({
-      mensaje:
-        "Las 20 mediciones se registraron y analizaron correctamente.",
+      mensaje: "Las 20 mediciones se registraron y analizaron correctamente.",
 
       analisisId: nuevoAnalisis._id,
       prueba: nuevoAnalisis.prueba,
@@ -1205,7 +1467,7 @@ const analisisActivo = await Analisis.findOne({
         totalValidas,
         totalPendientes: hayAtipico ? 1 : 0,
         totalExcluidas: 0,
-        medicionesRequeridas: 20
+        medicionesRequeridas: 20,
       },
 
       analisisGrubbs: resultadoGrubbs,
@@ -1215,11 +1477,10 @@ const analisisActivo = await Analisis.findOne({
             id: medicionSospechosa._id,
             fecha: medicionSospechosa.fecha,
             valor: medicionSospechosa.valor,
-            estado: medicionSospechosa.estado
+            estado: medicionSospechosa.estado,
           }
-        : null
+        : null,
     });
-
   } catch (error) {
     console.error("Error al registrar lote:", error);
 
@@ -1227,10 +1488,7 @@ const analisisActivo = await Analisis.findOne({
       typeof error.hasErrorLabel === "function" &&
       error.hasErrorLabel("UnknownTransactionCommitResult");
 
-    if (
-      !confirmacionDesconocida &&
-      session?.inTransaction()
-    ) {
+    if (!confirmacionDesconocida && session?.inTransaction()) {
       try {
         await session.abortTransaction();
       } catch (errorAbort) {
@@ -1240,25 +1498,21 @@ const analisisActivo = await Analisis.findOne({
 
     if (confirmacionDesconocida) {
       return res.status(503).json({
-        mensaje:
-          "No se pudo confirmar si el lote quedó registrado.",
-        accion:
-          "Consulta MongoDB antes de repetir la petición."
+        mensaje: "No se pudo confirmar si el lote quedó registrado.",
+        accion: "Consulta MongoDB antes de repetir la petición.",
       });
     }
 
     return res.status(500).json({
       mensaje: "Error al registrar las mediciones.",
-      error: error.message
+      error: error.message,
     });
-
   } finally {
     if (session) {
       await session.endSession();
     }
   }
 });
-
 
 app.get("/api/control/reevaluar-grubbs/:analisisId", async (req, res) => {
   try {
@@ -1336,7 +1590,6 @@ app.get("/api/control/reevaluar-grubbs/:analisisId", async (req, res) => {
   }
 });
 
-
 app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
   let session = null;
 
@@ -1345,48 +1598,43 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
 
     if (!mongoose.isValidObjectId(analisisId)) {
       return res.status(400).json({
-        mensaje: "El ID del análisis no es válido."
+        mensaje: "El ID del análisis no es válido.",
       });
     }
 
     session = await mongoose.startSession();
     session.startTransaction();
 
-    const analisis = await Analisis.findById(analisisId)
-      .session(session);
+    const analisis = await Analisis.findById(analisisId).session(session);
 
     if (!analisis) {
       await session.abortTransaction();
       return res.status(404).json({
-        mensaje: "No se encontró el análisis."
+        mensaje: "No se encontró el análisis.",
       });
     }
 
     if (analisis.estado !== "pendiente_revision") {
       await session.abortTransaction();
       return res.status(409).json({
-        mensaje: "El análisis no está pendiente de revisión."
+        mensaje: "El análisis no está pendiente de revisión.",
       });
     }
 
     const mediciones = await Medicion.find({
       analisisId: analisis._id,
-      tipoMedicion: "inicial"
+      tipoMedicion: "inicial",
     })
       .sort({ fecha: 1, _id: 1 })
       .session(session);
 
-    const validas = mediciones.filter(
-      m => m.estado === "valida"
-    );
+    const validas = mediciones.filter((m) => m.estado === "valida");
 
     const pendientes = mediciones.filter(
-      m => m.estado === "pendiente_revision"
+      (m) => m.estado === "pendiente_revision",
     );
 
-    const excluidas = mediciones.filter(
-      m => m.estado === "excluida"
-    );
+    const excluidas = mediciones.filter((m) => m.estado === "excluida");
 
     const requeridas = analisis.medicionesRequeridas || 20;
 
@@ -1403,7 +1651,7 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
         mensaje: "El análisis no cumple las condiciones de recuperación.",
         totalValidas: validas.length,
         totalPendientes: pendientes.length,
-        totalExcluidas: excluidas.length
+        totalExcluidas: excluidas.length,
       });
     }
 
@@ -1411,34 +1659,29 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
 
     // Este procedimiento solo se aplica al reemplazo
     // específico que quedó pendiente por el error anterior.
-    if (
-      String(pendiente._id) !==
-      "6afc8a8b6261f25db769a089"
-    ) {
+    if (String(pendiente._id) !== "6afc8a8b6261f25db769a089") {
       await session.abortTransaction();
 
       return res.status(409).json({
-        mensaje: "La medición pendiente no corresponde al reemplazo esperado."
+        mensaje: "La medición pendiente no corresponde al reemplazo esperado.",
       });
     }
 
-    const candidatas = mediciones.filter(
-      m => m.estado !== "excluida"
-    );
+    const candidatas = mediciones.filter((m) => m.estado !== "excluida");
 
     if (candidatas.length !== requeridas) {
       await session.abortTransaction();
 
       return res.status(409).json({
-        mensaje: "No existen exactamente 20 mediciones candidatas."
+        mensaje: "No existen exactamente 20 mediciones candidatas.",
       });
     }
 
     const resultadoGrubbs = pruebaGrubbs(
-      candidatas.map(m => ({
+      candidatas.map((m) => ({
         fecha: m.fecha,
-        valor: m.valor
-      }))
+        valor: m.valor,
+      })),
     );
 
     if (
@@ -1451,7 +1694,7 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
 
       return res.status(422).json({
         mensaje: "Grubbs no permite finalizar automáticamente este análisis.",
-        resultadoGrubbs
+        resultadoGrubbs,
       });
     }
 
@@ -1460,12 +1703,12 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
       {
         _id: analisis._id,
         estado: "pendiente_revision",
-        versionReemplazos: analisis.versionReemplazos
+        versionReemplazos: analisis.versionReemplazos,
       },
       {
-        $inc: { versionReemplazos: 1 }
+        $inc: { versionReemplazos: 1 },
       },
-      { session }
+      { session },
     );
 
     if (bloqueo.modifiedCount !== 1) {
@@ -1476,19 +1719,15 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
     pendiente.estado = "valida";
     await pendiente.save({ session });
 
-    const estadisticas = calcularEstadisticas(
-      candidatas.map(m => m.valor)
-    );
+    const estadisticas = calcularEstadisticas(candidatas.map((m) => m.valor));
 
     analisis.media = estadisticas.media;
-    analisis.desviacionEstandar =
-      estadisticas.desviacionEstandar;
-    analisis.coeficienteVariacion =
-      estadisticas.coeficienteVariacion;
+    analisis.desviacionEstandar = estadisticas.desviacionEstandar;
+    analisis.coeficienteVariacion = estadisticas.coeficienteVariacion;
 
-    analisis.mediciones = candidatas.map(m => ({
+    analisis.mediciones = candidatas.map((m) => ({
       fecha: m.fecha,
-      valor: m.valor
+      valor: m.valor,
     }));
 
     analisis.analisisGrubbs = resultadoGrubbs;
@@ -1508,17 +1747,16 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
       estadisticas: {
         media: analisis.media,
         desviacionEstandar: analisis.desviacionEstandar,
-        coeficienteVariacion: analisis.coeficienteVariacion
+        coeficienteVariacion: analisis.coeficienteVariacion,
       },
       analisisGrubbs: resultadoGrubbs,
       resumen: {
         totalRegistradas: mediciones.length,
         totalValidas: requeridas,
         totalExcluidas: excluidas.length,
-        totalPendientes: 0
-      }
+        totalPendientes: 0,
+      },
     });
-
   } catch (error) {
     console.error("Error al finalizar análisis:", error);
 
@@ -1534,7 +1772,8 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
 
     if (conflicto) {
       return res.status(409).json({
-        mensaje: "El análisis fue modificado simultáneamente. Consulta su estado."
+        mensaje:
+          "El análisis fue modificado simultáneamente. Consulta su estado.",
       });
     }
 
@@ -1544,15 +1783,14 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
     ) {
       return res.status(503).json({
         mensaje: "No se pudo confirmar el resultado de la transacción.",
-        accion: "Consulta el progreso antes de intentar nuevamente."
+        accion: "Consulta el progreso antes de intentar nuevamente.",
       });
     }
 
     return res.status(500).json({
       mensaje: "Error al finalizar el análisis.",
-      error: error.message
+      error: error.message,
     });
-
   } finally {
     if (session) {
       if (session.inTransaction()) {
@@ -1564,9 +1802,7 @@ app.post("/api/control/finalizar-analisis/:analisisId", async (req, res) => {
   }
 });
 
-
-
-// Funcion para confirmar una transaccion 
+// Funcion para confirmar una transaccion
 async function confirmarTransaccion(session) {
   const maxIntentos = 3;
 
@@ -1584,7 +1820,7 @@ async function confirmarTransaccion(session) {
       }
 
       console.warn(
-        `Confirmación desconocida. Intento ${intento} de ${maxIntentos}.`
+        `Confirmación desconocida. Intento ${intento} de ${maxIntentos}.`,
       );
 
       if (intento === maxIntentos) {
@@ -1593,8 +1829,6 @@ async function confirmarTransaccion(session) {
     }
   }
 }
-
-
 
 app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
   let session = null;
@@ -1606,7 +1840,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     // 1. Validar los datos recibidos
     if (!mongoose.isValidObjectId(analisisId)) {
       return res.status(400).json({
-        mensaje: "El ID del análisis no es válido."
+        mensaje: "El ID del análisis no es válido.",
       });
     }
 
@@ -1614,17 +1848,11 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       typeof fecha === "string" &&
       /^\d{4}-\d{2}-\d{2}$/.test(fecha) &&
       !Number.isNaN(Date.parse(`${fecha}T12:00:00.000Z`)) &&
-      new Date(`${fecha}T12:00:00.000Z`)
-        .toISOString()
-        .slice(0, 10) === fecha;
+      new Date(`${fecha}T12:00:00.000Z`).toISOString().slice(0, 10) === fecha;
 
-    if (
-      !fechaValida ||
-      typeof valor !== "number" ||
-      !Number.isFinite(valor)
-    ) {
+    if (!fechaValida || typeof valor !== "number" || !Number.isFinite(valor)) {
       return res.status(400).json({
-        mensaje: "Proporciona una fecha YYYY-MM-DD y un valor numérico válido."
+        mensaje: "Proporciona una fecha YYYY-MM-DD y un valor numérico válido.",
       });
     }
 
@@ -1632,13 +1860,12 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     session = await mongoose.startSession();
     session.startTransaction();
 
-    const analisis = await Analisis.findById(analisisId)
-      .session(session);
+    const analisis = await Analisis.findById(analisisId).session(session);
 
     if (!analisis) {
       await session.abortTransaction();
       return res.status(404).json({
-        mensaje: "No se encontró el análisis."
+        mensaje: "No se encontró el análisis.",
       });
     }
 
@@ -1647,42 +1874,35 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     if (analisis.estado !== "requiere_reemplazo") {
       await session.abortTransaction();
       return res.status(409).json({
-        mensaje: "El análisis no está esperando un reemplazo."
+        mensaje: "El análisis no está esperando un reemplazo.",
       });
     }
 
     // 3. Consultar todas las mediciones del análisis
     const mediciones = await Medicion.find({
       analisisId: analisis._id,
-      tipoMedicion: "inicial"
+      tipoMedicion: "inicial",
     }).session(session);
 
-    const validas = mediciones.filter(
-      m => m.estado === "valida"
-    );
+    const validas = mediciones.filter((m) => m.estado === "valida");
 
-    const excluidas = mediciones.filter(
-      m => m.estado === "excluida"
-    );
+    const excluidas = mediciones.filter((m) => m.estado === "excluida");
 
     const pendientes = mediciones.filter(
-      m => m.estado === "pendiente_revision"
+      (m) => m.estado === "pendiente_revision",
     );
 
     if (pendientes.length > 0) {
       await session.abortTransaction();
       return res.status(409).json({
-        mensaje: "Primero debes resolver las mediciones pendientes."
+        mensaje: "Primero debes resolver las mediciones pendientes.",
       });
     }
 
-    if (
-      excluidas.length === 0 ||
-      validas.length >= requeridas
-    ) {
+    if (excluidas.length === 0 || validas.length >= requeridas) {
       await session.abortTransaction();
       return res.status(409).json({
-        mensaje: "Este análisis no necesita reemplazos."
+        mensaje: "Este análisis no necesita reemplazos.",
       });
     }
 
@@ -1691,50 +1911,50 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       {
         _id: analisis._id,
         estado: "requiere_reemplazo",
-        versionReemplazos: analisis.versionReemplazos
+        versionReemplazos: analisis.versionReemplazos,
       },
       {
-        $inc: { versionReemplazos: 1 }
+        $inc: { versionReemplazos: 1 },
       },
-      { session }
+      { session },
     );
 
     if (bloqueo.modifiedCount !== 1) {
       await session.abortTransaction();
       return res.status(409).json({
-        mensaje: "El análisis fue modificado. Consulta su estado nuevamente."
+        mensaje: "El análisis fue modificado. Consulta su estado nuevamente.",
       });
     }
 
     // 5. Crear la medición de reemplazo
     const [nuevaMedicion] = await Medicion.create(
-      [{
-        prueba: analisis.prueba,
-        nivelControl: analisis.nivelControl,
-        lote: analisis.lote,
-        equipo: analisis.equipo,
-        fecha: new Date(`${fecha}T12:00:00.000Z`),
-        valor,
-        tipoMedicion: "inicial",
-        analisisId: analisis._id,
-        estado: "pendiente_revision"
-      }],
-      { session }
+      [
+        {
+          prueba: analisis.prueba,
+          nivelControl: analisis.nivelControl,
+          lote: analisis.lote,
+          equipo: analisis.equipo,
+          fecha: new Date(`${fecha}T12:00:00.000Z`),
+          valor,
+          tipoMedicion: "inicial",
+          analisisId: analisis._id,
+          estado: "pendiente_revision",
+        },
+      ],
+      { session },
     );
 
     // 6. Recuperar las mediciones candidatas
     const candidatas = await Medicion.find({
       analisisId: analisis._id,
       tipoMedicion: "inicial",
-      estado: { $ne: "excluida" }
+      estado: { $ne: "excluida" },
     })
       .sort({ fecha: 1, _id: 1 })
       .session(session);
 
     if (candidatas.length > requeridas) {
-      throw new Error(
-        "El conjunto supera las mediciones requeridas."
-      );
+      throw new Error("El conjunto supera las mediciones requeridas.");
     }
 
     // 7. Si todavía faltan candidatas, seguir recopilando
@@ -1763,15 +1983,15 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
         resumen: {
           totalCandidatas: candidatas.length,
           faltantes: requeridas - candidatas.length,
-          estado: analisis.estado
-        }
+          estado: analisis.estado,
+        },
       });
     }
 
     // 8. Reevaluar Grubbs con exactamente 20 candidatas
-    const datosGrubbs = candidatas.map(m => ({
+    const datosGrubbs = candidatas.map((m) => ({
       fecha: m.fecha,
-      valor: m.valor
+      valor: m.valor,
     }));
 
     const resultadoGrubbs = pruebaGrubbs(datosGrubbs);
@@ -1785,9 +2005,10 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
 
       return res.status(422).json({
         mensaje: "No se pudo completar la evaluación de Grubbs.",
-        motivo: resultadoGrubbs?.error ||
+        motivo:
+          resultadoGrubbs?.error ||
           "Se requiere revisar un empate estadístico.",
-        reemplazoRegistrado: false
+        reemplazoRegistrado: false,
       });
     }
 
@@ -1804,9 +2025,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
         indice < 0 ||
         indice >= candidatas.length
       ) {
-        throw new Error(
-          "No se pudo identificar la medición sospechosa."
-        );
+        throw new Error("No se pudo identificar la medición sospechosa.");
       }
 
       sospechosa = candidatas[indice];
@@ -1821,10 +2040,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       if (!yaInvestigada) {
         // El nuevo reemplazo es válido provisionalmente
         // si otra medición resultó sospechosa
-        if (
-          String(sospechosa._id) !==
-          String(nuevaMedicion._id)
-        ) {
+        if (String(sospechosa._id) !== String(nuevaMedicion._id)) {
           nuevaMedicion.estado = "valida";
           await nuevaMedicion.save({ session });
         }
@@ -1834,7 +2050,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       }
     }
 
-        // Si Grubbs no detectó valores atípicos,
+    // Si Grubbs no detectó valores atípicos,
     // aceptar el reemplazo antes de contar pendientes.
     if (!resultadoGrubbs.esAtipico) {
       nuevaMedicion.estado = "valida";
@@ -1845,26 +2061,22 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     const pendientesFinales = await Medicion.countDocuments({
       analisisId: analisis._id,
       tipoMedicion: "inicial",
-      estado: "pendiente_revision"
+      estado: "pendiente_revision",
     }).session(session);
 
     if (pendientesFinales === 0) {
       nuevaMedicion.estado = "valida";
       await nuevaMedicion.save({ session });
 
-      const estadisticas = calcularEstadisticas(
-        candidatas.map(m => m.valor)
-      );
+      const estadisticas = calcularEstadisticas(candidatas.map((m) => m.valor));
 
       analisis.media = estadisticas.media;
-      analisis.desviacionEstandar =
-        estadisticas.desviacionEstandar;
-      analisis.coeficienteVariacion =
-        estadisticas.coeficienteVariacion;
+      analisis.desviacionEstandar = estadisticas.desviacionEstandar;
+      analisis.coeficienteVariacion = estadisticas.coeficienteVariacion;
 
-      analisis.mediciones = candidatas.map(m => ({
+      analisis.mediciones = candidatas.map((m) => ({
         fecha: m.fecha,
-        valor: m.valor
+        valor: m.valor,
       }));
 
       analisis.estado = "completo";
@@ -1880,13 +2092,13 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     const totalValidas = await Medicion.countDocuments({
       analisisId: analisis._id,
       tipoMedicion: "inicial",
-      estado: "valida"
+      estado: "valida",
     }).session(session);
 
     const totalExcluidas = await Medicion.countDocuments({
       analisisId: analisis._id,
       tipoMedicion: "inicial",
-      estado: "excluida"
+      estado: "excluida",
     }).session(session);
 
     analisis.totalMedicionesValidas = totalValidas;
@@ -1898,7 +2110,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       (totalValidas !== requeridas || pendientesFinales !== 0)
     ) {
       throw new Error(
-        "No se puede completar un análisis con mediciones faltantes."
+        "No se puede completar un análisis con mediciones faltantes.",
       );
     }
 
@@ -1917,20 +2129,18 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
             id: sospechosa._id,
             fecha: sospechosa.fecha,
             valor: sospechosa.valor,
-            estado: sospechosa.estado
+            estado: sospechosa.estado,
           }
         : null,
       resumen: {
-        totalRegistradas:
-          totalValidas + totalExcluidas + pendientesFinales,
+        totalRegistradas: totalValidas + totalExcluidas + pendientesFinales,
         totalValidas,
         totalExcluidas,
         totalPendientes: pendientesFinales,
         medicionesRequeridas: requeridas,
-        estado: analisis.estado
-      }
+        estado: analisis.estado,
+      },
     });
-
   } catch (error) {
     console.error("Error al registrar reemplazo:", error);
 
@@ -1947,7 +2157,7 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     if (conflicto) {
       return res.status(409).json({
         mensaje: "Otro proceso modificó el análisis.",
-        accion: "Consulta el progreso antes de reintentar."
+        accion: "Consulta el progreso antes de reintentar.",
       });
     }
 
@@ -1957,15 +2167,14 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     ) {
       return res.status(503).json({
         mensaje: "No se pudo confirmar el resultado de la transacción.",
-        accion: "Consulta el historial antes de reintentar."
+        accion: "Consulta el historial antes de reintentar.",
       });
     }
 
     return res.status(500).json({
       mensaje: "Error al registrar el reemplazo.",
-      error: error.message
+      error: error.message,
     });
-
   } finally {
     if (session) {
       if (session.inTransaction()) {
@@ -1976,9 +2185,9 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
   }
 });
 
-
-
 app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
+  let session = null;
+
   try {
     const { id } = req.params;
 
@@ -1991,10 +2200,17 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
       });
     }
 
-    // Buscar la medición
-    const medicion = await Medicion.findById(id);
+// Iniciar la sesión de transacción
+session = await mongoose.startSession();
+
+session.startTransaction();
+   
+const medicion = await Medicion.findById(id)
+  .session(session);
+
 
     if (!medicion) {
+          await cancelarTransaccionSiActiva(session);
       return res.status(404).json({
         mensaje: "No se encontró la medición.",
       });
@@ -2002,6 +2218,7 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
 
     // Verificar que pertenezca al conjunto inicial
     if (medicion.tipoMedicion !== "inicial") {
+          await cancelarTransaccionSiActiva(session);
       return res.status(409).json({
         mensaje:
           "Este endpoint solo permite revisar mediciones iniciales. Las mediciones de seguimiento se evalúan mediante Levey-Jennings y Westgard.",
@@ -2010,13 +2227,46 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
 
     // Verificar que esté vinculada a un análisis
     if (!medicion.analisisId) {
+          await cancelarTransaccionSiActiva(session);
       return res.status(409).json({
         mensaje: "La medición inicial no está vinculada a un análisis.",
       });
     }
 
+
+   //Verificar que el análisis exista y esté pendiente de revisión
+
+    const analisisAsociado = await Analisis.findById(
+      medicion.analisisId
+    ).session(session);
+
+    if (!analisisAsociado) {
+
+      await cancelarTransaccionSiActiva(session);
+
+      return res.status(409).json({
+        mensaje:
+          "La medición tiene un análisis asociado, pero no se encontró el documento en MongoDB.",
+        codigo: "ANALISIS_NO_ENCONTRADO"
+      });
+    }
+
+    // Verificar que el análisis permita revisar mediciones
+    if (analisisAsociado.estado !== "pendiente_revision") {
+
+      await cancelarTransaccionSiActiva(session);
+
+      return res.status(409).json({
+        mensaje:
+          "El análisis no se encuentra pendiente de revisión de mediciones.",
+        estadoActual: analisisAsociado.estado
+      });
+    }
+
+
     // Solo se pueden revisar mediciones pendientes
     if (medicion.estado !== "pendiente_revision") {
+          await cancelarTransaccionSiActiva(session);
       return res.status(409).json({
         mensaje: "Esta medición no está pendiente de revisión.",
       });
@@ -2024,6 +2274,7 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
 
     // Validar la decisión
     if (!["conservar", "excluir"].includes(decision)) {
+          await cancelarTransaccionSiActiva(session);
       return res.status(400).json({
         mensaje: "La decisión debe ser conservar o excluir.",
       });
@@ -2031,6 +2282,7 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
 
     // Exigir observaciones de la investigación
     if (typeof observaciones !== "string" || !observaciones.trim()) {
+          await cancelarTransaccionSiActiva(session);
       return res.status(400).json({
         mensaje: "Debes documentar las observaciones de la investigación.",
       });
@@ -2044,12 +2296,44 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
         typeof autorizadoPor !== "string" ||
         !autorizadoPor.trim()
       ) {
+            await cancelarTransaccionSiActiva(session);
         return res.status(400).json({
           mensaje:
             "Para excluir debes indicar el motivo técnico y quién autorizó.",
         });
       }
     }
+
+
+    // PROTEGER CONTRA REVISIONES SIMULTÁNEAS
+   
+    const bloqueoRevision = await Medicion.updateOne(
+      {
+        _id: medicion._id,
+        analisisId: medicion.analisisId,
+        tipoMedicion: "inicial",
+        estado: "pendiente_revision"
+      },
+      {
+        $currentDate: {
+          updatedAt: true
+        }
+      },
+      { session }
+    );
+
+    if (bloqueoRevision.matchedCount !== 1) {
+      await cancelarTransaccionSiActiva(session);
+
+      return res.status(409).json({
+        mensaje:
+          "La medición ya no está disponible para revisión. Consulta su estado actualizado."
+      });
+    }
+
+
+
+    //iniciar transaccion de revision 
 
     medicion.investigacion = {
       observaciones: observaciones.trim(),
@@ -2072,22 +2356,48 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
       medicion.estado = "valida";
       medicion.decisionRevision = "conservar";
 
-      // Consultar el conjunto inicial que fue investigado
+  
+      // consultar las mediciones del conjunto inicial
       const medicionesConjunto = await Medicion.find({
         analisisId: medicion.analisisId,
         tipoMedicion: "inicial",
-        estado: { $ne: "excluida" },
+        estado: { $ne: "excluida" }
+      })
+        .sort({ fecha: 1, _id: 1 })
+        .session(session);
+
+      // comprobar que el conjunto tenga 20 mediciones
+      if (medicionesConjunto.length !== 20) {
+        throw new Error(
+          "No se puede conservar la medición porque el conjunto inicial no contiene exactamente 20 mediciones."
+        );
+      }
+
+     
+      
+      // incluir la medición investigada en el conjunto actualizado
+      const conjuntoActualizado = medicionesConjunto.map((m) => {
+        if (String(m._id) === String(medicion._id)) {
+          return medicion;
+        }
+
+        return m;
       });
+
+      // generar la firma de las 20 mediciones investigadas
+      medicion.firmaConjuntoRevision =
+        generarFirmaConjunto(conjuntoActualizado);
+
 
       // Generar una firma de las mediciones evaluadas
       medicion.firmaConjuntoRevision = generarFirmaConjunto(medicionesConjunto);
     }
 
-    await medicion.save();
+    await medicion.save({ session });
 
     // Actualizar el análisis relacionado con la medición
     if (medicion.analisisId) {
-      const analisis = await Analisis.findById(medicion.analisisId);
+     const analisis = analisisAsociado;
 
       if (analisis) {
         // Consultar únicamente las mediciones iniciales
@@ -2095,7 +2405,7 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
         const medicionesAnalisis = await Medicion.find({
           analisisId: analisis._id,
           tipoMedicion: "inicial",
-        });
+        }).session(session);
 
         // Contar las mediciones válidas
         const totalValidas = medicionesAnalisis.filter(
@@ -2109,11 +2419,26 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
 
         analisis.totalMedicionesValidas = totalValidas;
 
-        if (hayPendientes) {
-          analisis.estado = "pendiente_revision";
-        } else if (totalValidas < analisis.medicionesRequeridas) {
-          analisis.estado = "requiere_reemplazo";
-        } else if (totalValidas === analisis.medicionesRequeridas) {
+        
+if (hayPendientes) {
+
+  analisis.estado = "pendiente_revision";
+
+} else if (totalValidas < analisis.medicionesRequeridas) {
+
+  // indicar que faltan mediciones válidas
+  analisis.estado = "requiere_reemplazo";
+
+  // eliminar estadísticas definitivas anteriores
+  analisis.media = null;
+  analisis.desviacionEstandar = null;
+  analisis.coeficienteVariacion = null;
+
+  // conservar el historial de las mediciones originales
+  // hasta que se complete el reemplazo obligatorio
+
+} else if (totalValidas === analisis.medicionesRequeridas) {
+
           // Obtener únicamente las mediciones válidas
           const medicionesValidas = medicionesAnalisis
             .filter((m) => m.estado === "valida")
@@ -2128,15 +2453,30 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
           // Reevaluar Grubbs con las 20 mediciones válidas
           const resultadoGrubbs = pruebaGrubbs(datosGrubbs);
 
+          if (resultadoGrubbs.error) {
+            throw new Error(resultadoGrubbs.error);
+          }
+
           if (
-            resultadoGrubbs.error ||
             resultadoGrubbs.esAtipico ||
-            resultadoGrubbs.hayEmpate
+            resultadoGrubbs.requiereRevisionEmpate
           ) {
-            analisis.estado = "pendiente_revision";
+            // Conservar el resultado de Grubbs.
             analisis.analisisGrubbs = resultadoGrubbs;
 
-            if (resultadoGrubbs.esAtipico === true) {
+            if (resultadoGrubbs.requiereRevisionEmpate) {
+              // El empate significativo requiere revisión.
+              // No hay una única medición sospechosa.
+              analisis.estado = "requiere_revision_empate";
+
+              // No guardar estadísticas definitivas.
+              analisis.media = null;
+              analisis.desviacionEstandar = null;
+              analisis.coeficienteVariacion = null;
+
+              // Las 20 mediciones siguen registradas.
+              analisis.totalMedicionesValidas = medicionesValidas.length;
+            } else if (resultadoGrubbs.esAtipico === true) {
               const medicionSospechosa =
                 medicionesValidas[resultadoGrubbs.indiceSospechoso];
 
@@ -2157,48 +2497,66 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
                 medicionSospechosa.firmaConjuntoRevision != null &&
                 medicionSospechosa.firmaConjuntoRevision === firmaActual;
 
-              if (yaFueInvestigada) {
-                // Mantener la medición investigada y conservada
-                medicionSospechosa.estado = "valida";
+           
+if (yaFueInvestigada) {
 
-                await medicionSospechosa.save();
+  // mantener la medición investigada y conservada
+  medicionSospechosa.estado = "valida";
 
-                // Calcular las estadísticas con las 20 mediciones aceptadas
-                const valoresValidos = medicionesValidas.map((m) => m.valor);
+  // verificar que existan exactamente 20 mediciones válidas
+  if (
+    medicionesValidas.length !== 20 ||
+    medicionesValidas.some((m) => m.estado !== "valida")
+  ) {
+    throw new Error(
+      "No se puede completar el análisis sin 20 mediciones válidas."
+    );
+  }
 
-                const estadisticasFinales =
-                  calcularEstadisticas(valoresValidos);
+  // calcular las estadísticas con las 20 mediciones aceptadas
+  const valoresValidos = medicionesValidas.map((m) => m.valor);
 
-                // Guardar los resultados estadísticos
-                analisis.media = estadisticasFinales.media;
+  const estadisticasFinales =
+    calcularEstadisticas(valoresValidos);
 
-                analisis.desviacionEstandar =
-                  estadisticasFinales.desviacionEstandar;
+  // guardar los resultados estadísticos
+  analisis.media = estadisticasFinales.media;
 
-                analisis.coeficienteVariacion =
-                  estadisticasFinales.coeficienteVariacion;
+  analisis.desviacionEstandar =
+    estadisticasFinales.desviacionEstandar;
 
-                analisis.totalMediciones = estadisticasFinales.totalMediciones;
+  analisis.coeficienteVariacion =
+    estadisticasFinales.coeficienteVariacion;
 
-                analisis.totalMedicionesValidas = medicionesValidas.length;
+  analisis.totalMediciones =
+    estadisticasFinales.totalMediciones;
 
-                // Guardar las 20 mediciones aceptadas
-                analisis.mediciones = medicionesValidas.map((m) => ({
-                  fecha: m.fecha,
-                  valor: m.valor,
-                }));
+  analisis.totalMedicionesValidas =
+    medicionesValidas.length;
 
-                // Conservar el resultado de Grubbs,
-                // incluso cuando esAtipico sea true
-                analisis.analisisGrubbs = resultadoGrubbs;
+  // guardar las 20 mediciones aceptadas
+  analisis.mediciones = medicionesValidas.map((m) => ({
+    fecha: m.fecha,
+    valor: m.valor
+  }));
 
-                // Finalizar los cálculos iniciales
-                analisis.estado = "completo";
+  // conservar el resultado de grubbs y la investigación
+  analisis.analisisGrubbs = resultadoGrubbs;
+
+  // finalizar el análisis después de la investigación
+  analisis.estado = "completo";
+
+  // guardar la medición conservada dentro de la transacción
+  await medicionSospechosa.save({ session });
+
+}
+
+
               } else {
                 // El resultado necesita una investigación
                 medicionSospechosa.estado = "pendiente_revision";
 
-                await medicionSospechosa.save();
+                await medicionSospechosa.save({ session });
 
                 analisis.totalMedicionesValidas = medicionesValidas.length - 1;
               }
@@ -2210,12 +2568,13 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
             const estadisticasFinales = calcularEstadisticas(valoresValidos);
 
             // Actualizar los resultados del análisis
-            analisis.media = estadisticasFinales.media;
-            analisis.desviacionEstandar =
-              estadisticasFinales.desviacionEstandar;
-            analisis.coeficienteVariacion =
-              estadisticasFinales.coeficienteVariacion;
-            analisis.totalMediciones = estadisticasFinales.totalMediciones;
+           analisis.media = estadisticasFinales.media;
+analisis.desviacionEstandar = estadisticasFinales.desviacionEstandar;
+analisis.coeficienteVariacion =
+  estadisticasFinales.coeficienteVariacion;
+
+analisis.totalMediciones = estadisticasFinales.totalMediciones;
+analisis.totalMedicionesValidas = medicionesValidas.length;
 
             // Guardar únicamente las 20 mediciones válidas
             // en el conjunto estadístico final
@@ -2234,9 +2593,12 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
           analisis.estado = "pendiente_revision";
         }
 
-        await analisis.save();
+        await analisis.save({ session });
       }
-    }
+    
+
+
+    await confirmarTransaccion(session);
 
     return res.status(200).json({
       mensaje:
@@ -2245,13 +2607,86 @@ app.patch("/api/control/revisar-medicion/:id", async (req, res) => {
           : "Medición revisada y conservada correctamente.",
       medicion,
     });
+  
   } catch (error) {
+
+    // Cancelar únicamente si la transacción sigue activa.
+    if (session && session.inTransaction()) {
+      try {
+        await session.abortTransaction();
+      } catch (errorCancelacion) {
+        console.error(
+          "Error al cancelar la transacción:",
+          errorCancelacion
+        );
+      }
+    }
+
+
+    
+    // CONFIRMACIÓN DE TRANSACCIÓN DESCONOCIDA
+
+
+    const confirmacionDesconocida =
+      typeof error.hasErrorLabel === "function" &&
+      error.hasErrorLabel("UnknownTransactionCommitResult");
+
+    if (confirmacionDesconocida) {
+      console.error(
+        "No fue posible confirmar el resultado de la transacción:",
+        error.message
+      );
+
+      return res.status(503).json({
+        mensaje:
+          "No se pudo determinar si la revisión fue guardada. Consulta el estado actualizado de la medición antes de intentar nuevamente.",
+        codigo: "CONFIRMACION_DESCONOCIDA",
+        medicionId: req.params.id
+      });
+    }
+
+
+    // IDENTIFICAR CONFLICTOS DE CONCURRENCIA
+    const conflictoTransaccion =
+      typeof error.hasErrorLabel === "function" &&
+      error.hasErrorLabel("TransientTransactionError");
+
+    const conflictoEscritura =
+      error.code === 112 ||
+      error.codeName === "WriteConflict";
+
+    if (conflictoTransaccion || conflictoEscritura) {
+      console.warn(
+        "Conflicto al revisar la medición:",
+        error.message
+      );
+
+      return res.status(409).json({
+        mensaje:
+          "La medición está siendo modificada por otra operación. Consulta su estado actualizado antes de volver a intentar.",
+        codigo: "CONFLICTO_REVISION"
+      });
+    }
+
+
+    // OTROS ERRORES DEL SERVIDOR
+
+
     console.error("Error al revisar medición:", error);
 
     return res.status(500).json({
       mensaje: "Error al revisar la medición.",
-      error: error.message,
+      error: error.message
     });
+
+
+  } finally {
+
+    // Liberar la sesión de MongoDB.
+    if (session) {
+      await session.endSession();
+    }
+
   }
 });
 
@@ -2616,7 +3051,6 @@ app.post("/api/control/parametros", async (req, res) => {
   }
 });
 
-
 app.patch("/api/control/parametros/:id/validar", async (req, res) => {
   try {
     const { id } = req.params;
@@ -2624,7 +3058,7 @@ app.patch("/api/control/parametros/:id/validar", async (req, res) => {
     // Validar identificador de MongoDB
     if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
-        mensaje: "El ID del parámetro no es válido."
+        mensaje: "El ID del parámetro no es válido.",
       });
     }
 
@@ -2633,21 +3067,21 @@ app.patch("/api/control/parametros/:id/validar", async (req, res) => {
 
     if (!parametro) {
       return res.status(404).json({
-        mensaje: "No se encontraron los parámetros de control."
+        mensaje: "No se encontraron los parámetros de control.",
       });
     }
 
     // Evitar validar nuevamente
     if (parametro.estado === "validado") {
       return res.status(409).json({
-        mensaje: "Estos parámetros ya están validados."
+        mensaje: "Estos parámetros ya están validados.",
       });
     }
 
     // Solo se permiten parámetros pendientes
     if (parametro.estado !== "pendiente_validacion") {
       return res.status(409).json({
-        mensaje: "Los parámetros no están pendientes de validación."
+        mensaje: "Los parámetros no están pendientes de validación.",
       });
     }
 
@@ -2658,50 +3092,47 @@ app.patch("/api/control/parametros/:id/validar", async (req, res) => {
       parametro.desviacionEstandar <= 0
     ) {
       return res.status(400).json({
-        mensaje: "La media o desviación estándar no son válidas."
+        mensaje: "La media o desviación estándar no son válidas.",
       });
     }
 
     // Actualizar de forma condicional para evitar
     // validar un registro cuyo estado haya cambiado
-    const parametroValidado =
-      await ParametroControl.findOneAndUpdate(
-        {
-          _id: id,
-          estado: "pendiente_validacion"
+    const parametroValidado = await ParametroControl.findOneAndUpdate(
+      {
+        _id: id,
+        estado: "pendiente_validacion",
+      },
+      {
+        $set: {
+          estado: "validado",
         },
-        {
-          $set: {
-            estado: "validado"
-          }
-        },
-        {
-          new: true,
-          runValidators: true
-        }
-      );
+      },
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
 
     if (!parametroValidado) {
       return res.status(409).json({
-        mensaje: "El estado cambió durante la validación."
+        mensaje: "El estado cambió durante la validación.",
       });
     }
 
     return res.status(200).json({
       mensaje: "Parámetros de control validados correctamente.",
-      parametro: parametroValidado
+      parametro: parametroValidado,
     });
-
   } catch (error) {
     console.error("Error al validar parámetros:", error);
 
     return res.status(500).json({
       mensaje: "Error al validar los parámetros de control.",
-      error: error.message
+      error: error.message,
     });
   }
 });
-
 
 // Endpoint para consultar parámetros de control con filtros
 
@@ -2764,36 +3195,35 @@ app.get("/api/control/analisis", async (req, res) => {
 
     const { media, desviacionEstandar } = parametros;
 
-
     // Buscar el análisis completo correspondiente
     const analisis = await Analisis.findOne({
       prueba,
       nivelControl,
       lote,
       equipo,
-      estado: "completo"
+      estado: "completo",
     }).sort({ createdAt: -1 });
 
     if (!analisis) {
       return res.status(404).json({
-        mensaje: "No se encontró un análisis completo para esta combinación."
+        mensaje: "No se encontró un análisis completo para esta combinación.",
       });
     }
-
 
     // Recuperar únicamente las mediciones válidas del análisis
     const mediciones = await Medicion.find({
       analisisId: analisis._id,
-      estado: "valida"
+      estado: "valida",
     }).sort({ fecha: 1, _id: 1 });
 
     const requeridas = analisis.medicionesRequeridas || 20;
 
     if (mediciones.length !== requeridas) {
       return res.status(409).json({
-        mensaje: "El análisis no tiene la cantidad requerida de mediciones válidas.",
+        mensaje:
+          "El análisis no tiene la cantidad requerida de mediciones válidas.",
         encontradas: mediciones.length,
-        requeridas
+        requeridas,
       });
     }
 
@@ -2812,7 +3242,6 @@ app.get("/api/control/analisis", async (req, res) => {
         valorZ: Number(valorZ.toFixed(3)),
       };
     });
-
 
     // Evaluación de reglas de Westgard
     const alertas = [];
@@ -3102,8 +3531,6 @@ app.get("/api/control/grafica", async (req, res) => {
   }
 });
 
-
-
 app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
   try {
     const { analisisId } = req.params;
@@ -3111,7 +3538,7 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
     // 1. Validar identificador
     if (!mongoose.isValidObjectId(analisisId)) {
       return res.status(400).json({
-        mensaje: "El ID del análisis no es válido."
+        mensaje: "El ID del análisis no es válido.",
       });
     }
 
@@ -3120,14 +3547,14 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
 
     if (!analisis) {
       return res.status(404).json({
-        mensaje: "No se encontró el análisis."
+        mensaje: "No se encontró el análisis.",
       });
     }
 
     // 3. Solo permitir análisis completos
     if (analisis.estado !== "completo") {
       return res.status(409).json({
-        mensaje: "El análisis debe estar completo para generar la gráfica."
+        mensaje: "El análisis debe estar completo para generar la gráfica.",
       });
     }
 
@@ -3137,12 +3564,12 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
       nivelControl: analisis.nivelControl,
       lote: analisis.lote,
       equipo: analisis.equipo,
-      estado: "validado"
+      estado: "validado",
     });
 
     if (!parametros) {
       return res.status(404).json({
-        mensaje: "No existen parámetros objetivo validados para este análisis."
+        mensaje: "No existen parámetros objetivo validados para este análisis.",
       });
     }
 
@@ -3152,15 +3579,15 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
       parametros.desviacionEstandar <= 0
     ) {
       return res.status(422).json({
-        mensaje: "Los parámetros objetivo no son válidos."
+        mensaje: "Los parámetros objetivo no son válidos.",
       });
     }
 
     // 5. Recuperar únicamente las mediciones válidas
-  const mediciones = await Medicion.find({
-  analisisId: analisis._id,
-  estado: "valida"
-}).sort({ fecha: 1, _id: 1 });
+    const mediciones = await Medicion.find({
+      analisisId: analisis._id,
+      estado: "valida",
+    }).sort({ fecha: 1, _id: 1 });
 
     const requeridas = analisis.medicionesRequeridas || 20;
 
@@ -3168,14 +3595,14 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
       return res.status(409).json({
         mensaje: "No existen exactamente las mediciones válidas requeridas.",
         encontradas: mediciones.length,
-        requeridas
+        requeridas,
       });
     }
 
     // 6. Preparar los puntos de la gráfica
-    const resultados = mediciones.map(m => ({
+    const resultados = mediciones.map((m) => ({
       fecha: m.fecha.toISOString(),
-      valor: m.valor
+      valor: m.valor,
     }));
 
     // 7. Generar la imagen usando parámetros objetivo
@@ -3184,26 +3611,27 @@ app.get("/api/control/levey-jennings/:analisisId/grafica", async (req, res) => {
       media: parametros.media,
       desviacionEstandar: parametros.desviacionEstandar,
       resultados,
-      alertas: []
+      alertas: [],
     });
 
     // 8. Enviar imagen PNG
     res.setHeader("Content-Type", "image/png");
-    res.setHeader("Content-Disposition", 'inline; filename="levey-jennings.png"');
+    res.setHeader(
+      "Content-Disposition",
+      'inline; filename="levey-jennings.png"',
+    );
     res.setHeader("Cache-Control", "no-store");
 
     return res.send(imagen);
-
   } catch (error) {
     console.error("Error al generar Levey-Jennings automático:", error);
 
     return res.status(500).json({
       mensaje: "Error al generar la gráfica de Levey-Jennings.",
-      error: error.message
+      error: error.message,
     });
   }
 });
-
 
 // Endpoint para buscar análisis por nombre de prueba
 
@@ -3331,324 +3759,282 @@ app.get("/api/control/grafica-analisis/:analisisId", async (req, res) => {
   }
 });
 
-
 /* ==========================================
    REGISTRO DIARIO DE MEDICIONES
 ========================================== */
 
 app.post("/api/control/registrar-diario", async (req, res) => {
+  let session = null;
 
-    let session = null;
+  try {
+    const { prueba, nivelControl, lote, equipo, fecha, valor } = req.body || {};
 
-    try {
+    // Validar identificación
+    const identificacion = {
+      prueba,
+      nivelControl,
+      lote,
+      equipo,
+    };
 
-        const {
-            prueba,
-            nivelControl,
-            lote,
-            equipo,
-            fecha,
-            valor
-        } = req.body || {};
+    if (
+      Object.values(identificacion).some(
+        (campo) => typeof campo !== "string" || !campo.trim(),
+      )
+    ) {
+      return res.status(400).json({
+        mensaje: "Debes proporcionar prueba, nivelControl, lote y equipo.",
+      });
+    }
 
-        // Validar identificación
-        const identificacion = {
-            prueba,
-            nivelControl,
-            lote,
-            equipo
-        };
+    // Validar valor
+    if (typeof valor !== "number" || !Number.isFinite(valor)) {
+      return res.status(400).json({
+        mensaje: "El valor debe ser un número válido.",
+      });
+    }
 
-        if (
-            Object.values(identificacion).some(
-                campo =>
-                    typeof campo !== "string" ||
-                    !campo.trim()
-            )
-        ) {
-            return res.status(400).json({
-                mensaje:
-                    "Debes proporcionar prueba, nivelControl, lote y equipo."
-            });
-        }
+    // Validar fecha
+    const fechaValida =
+      typeof fecha === "string" &&
+      /^\d{4}-\d{2}-\d{2}$/.test(fecha) &&
+      Number.isFinite(Date.parse(fecha)) &&
+      new Date(`${fecha}T12:00:00.000Z`).toISOString().slice(0, 10) === fecha;
 
-        // Validar valor
-        if (
-            typeof valor !== "number" ||
-            !Number.isFinite(valor)
-        ) {
-            return res.status(400).json({
-                mensaje: "El valor debe ser un número válido."
-            });
-        }
+    if (!fechaValida) {
+      return res.status(400).json({
+        mensaje: "La fecha no es válida.",
+      });
+    }
 
-        // Validar fecha
-        const fechaValida =
-            typeof fecha === "string" &&
-            /^\d{4}-\d{2}-\d{2}$/.test(fecha) &&
-            Number.isFinite(Date.parse(fecha)) &&
-            new Date(`${fecha}T12:00:00.000Z`)
-                .toISOString()
-                .slice(0, 10) === fecha;
+    // Normalizar identificación
+    for (const campo of Object.keys(identificacion)) {
+      identificacion[campo] = identificacion[campo].trim();
+    }
 
-        if (!fechaValida) {
-            return res.status(400).json({
-                mensaje: "La fecha no es válida."
-            });
-        }
+    session = await mongoose.startSession();
 
-        // Normalizar identificación
-        for (const campo of Object.keys(identificacion)) {
-            identificacion[campo] =
-                identificacion[campo].trim();
-        }
+    session.startTransaction();
 
-        session = await mongoose.startSession();
+    // Buscar análisis en recopilación
+    let analisis = await Analisis.findOne({
+      ...identificacion,
+      estado: "en_recopilacion",
+    }).session(session);
 
-        session.startTransaction();
-
-        // Buscar análisis en recopilación
-        let analisis = await Analisis.findOne({
-            ...identificacion,
-            estado: "en_recopilacion"
-        }).session(session);
-
-        // Evitar crear otro análisis si ya existe
-        // uno pendiente de revisión o reemplazo.
-        if (!analisis) {
-
-           
-const analisisBloqueado = await Analisis.findOne({
-    ...identificacion,
-    estado: {
-        $in: [
+    // Evitar crear otro análisis si ya existe
+    // uno pendiente de revisión o reemplazo.
+    if (!analisis) {
+      const analisisBloqueado = await Analisis.findOne({
+        ...identificacion,
+        estado: {
+          $in: [
             "pendiente_revision",
             "requiere_reemplazo",
-            "requiere_revision_empate"
-        ]
+            "requiere_revision_empate",
+          ],
+        },
+      }).session(session);
+
+      if (analisisBloqueado) {
+        await session.abortTransaction();
+
+        return res.status(409).json({
+          mensaje:
+            "Existe un análisis activo pendiente de revisión, reemplazo o resolución de empate.",
+          analisisId: analisisBloqueado._id,
+        });
+      }
+
+      // Crear nuevo análisis
+      const nuevosAnalisis = await Analisis.create(
+        [
+          {
+            ...identificacion,
+            estado: "en_recopilacion",
+            medicionesRequeridas: 20,
+            totalMediciones: 0,
+            totalMedicionesValidas: 0,
+            mediciones: [],
+          },
+        ],
+        { session },
+      );
+
+      analisis = nuevosAnalisis[0];
     }
-}).session(session);
 
+    // Consultar mediciones iniciales existentes
+    const medicionesExistentes = await Medicion.find({
+      analisisId: analisis._id,
+      tipoMedicion: "inicial",
+    }).session(session);
 
-            if (analisisBloqueado) {
+    if (medicionesExistentes.length >= 20) {
+      await session.abortTransaction();
 
-                await session.abortTransaction();
+      return res.status(409).json({
+        mensaje: "El análisis ya tiene 20 mediciones iniciales.",
+      });
+    }
 
-                return res.status(409).json({
-                   mensaje:
-    "Existe un análisis activo pendiente de revisión, reemplazo o resolución de empate.",
-                    analisisId: analisisBloqueado._id
-                });
-            }
+    // Evitar fechas duplicadas
+    const fechaNormalizada = new Date(`${fecha}T12:00:00.000Z`);
 
-            // Crear nuevo análisis
-            const nuevosAnalisis = await Analisis.create(
-                [{
-                    ...identificacion,
-                    estado: "en_recopilacion",
-                    medicionesRequeridas: 20,
-                    totalMediciones: 0,
-                    totalMedicionesValidas: 0,
-                    mediciones: []
-                }],
-                { session }
-            );
+    const fechaDuplicada = medicionesExistentes.some(
+      (medicion) => medicion.fecha.toISOString().slice(0, 10) === fecha,
+    );
 
-            analisis = nuevosAnalisis[0];
-        }
+    if (fechaDuplicada) {
+      await session.abortTransaction();
 
-        // Consultar mediciones iniciales existentes
-        const medicionesExistentes = await Medicion.find({
-            analisisId: analisis._id,
-            tipoMedicion: "inicial"
-        }).session(session);
+      return res.status(409).json({
+        mensaje: `Ya existe una medición registrada para la fecha ${fecha}.`,
+      });
+    }
 
-        if (medicionesExistentes.length >= 20) {
+    // Guardar medición individual
+    const nuevasMediciones = await Medicion.create(
+      [
+        {
+          ...identificacion,
+          analisisId: analisis._id,
+          tipoMedicion: "inicial",
+          fecha: fechaNormalizada,
+          valor,
+          estado: "valida",
+        },
+      ],
+      { session },
+    );
 
-            await session.abortTransaction();
-
-            return res.status(409).json({
-                mensaje:
-                    "El análisis ya tiene 20 mediciones iniciales."
-            });
-        }
-
-        // Evitar fechas duplicadas
-        const fechaNormalizada =
-            new Date(`${fecha}T12:00:00.000Z`);
-
-        const fechaDuplicada = medicionesExistentes.some(
-            medicion =>
-                medicion.fecha.toISOString().slice(0, 10) === fecha
-        );
-
-        if (fechaDuplicada) {
-
-            await session.abortTransaction();
-
-            return res.status(409).json({
-                mensaje:
-                    `Ya existe una medición registrada para la fecha ${fecha}.`
-            });
-        }
-
-        // Guardar medición individual
-        const nuevasMediciones = await Medicion.create(
-            [{
-                ...identificacion,
-                analisisId: analisis._id,
-                tipoMedicion: "inicial",
-                fecha: fechaNormalizada,
-                valor,
-                estado: "valida"
-            }],
-            { session }
-        );
-
-      
     // Actualizar progreso con control de concurrencia
     const totalAnterior = medicionesExistentes.length;
     const totalRegistradas = totalAnterior + 1;
 
     const actualizacion = await Analisis.updateOne(
-        {
-            _id: analisis._id,
-            estado: "en_recopilacion",
-            totalMediciones: totalAnterior
+      {
+        _id: analisis._id,
+        estado: "en_recopilacion",
+        totalMediciones: totalAnterior,
+      },
+      {
+        $set: {
+          totalMediciones: totalRegistradas,
+          totalMedicionesValidas: totalRegistradas,
         },
-        {
-            $set: {
-                totalMediciones: totalRegistradas,
-                totalMedicionesValidas: totalRegistradas
-            }
-        },
-        { session }
+      },
+      { session },
     );
 
     if (actualizacion.modifiedCount !== 1) {
-        const error = new Error(
-            "El análisis fue modificado por otra solicitud. Intenta nuevamente."
-        );
-        error.statusCode = 409;
-        throw error;
+      const error = new Error(
+        "El análisis fue modificado por otra solicitud. Intenta nuevamente.",
+      );
+      error.statusCode = 409;
+      throw error;
     }
-
 
     // Recargar el análisis después de la actualización
     // condicional para trabajar con su versión actual.
-    const analisisActualizado = await Analisis.findById(
-        analisis._id
-    ).session(session);
+    const analisisActualizado = await Analisis.findById(analisis._id).session(
+      session,
+    );
 
     if (!analisisActualizado) {
-        throw new Error(
-            "No se encontró el análisis después de actualizarlo."
-        );
+      throw new Error("No se encontró el análisis después de actualizarlo.");
     }
 
     analisis = analisisActualizado;
 
-
     analisis.totalMediciones = totalRegistradas;
     analisis.totalMedicionesValidas = totalRegistradas;
 
+    // Identificar si se completaron las 20 mediciones iniciales
 
+    const esUltimaMedicion = totalRegistradas === 20;
 
-// Identificar si se completaron las 20 mediciones iniciales
-
-const esUltimaMedicion = totalRegistradas === 20;
-
-
-if (esUltimaMedicion) {
-
-    // 1. Recuperar las 19 mediciones anteriores
-    // y agregar la medición número 20.
-    const datosGrubbs = [
-        ...medicionesExistentes.map(m => ({
-            fecha: m.fecha,
-            valor: m.valor
+    if (esUltimaMedicion) {
+      // 1. Recuperar las 19 mediciones anteriores
+      // y agregar la medición número 20.
+      const datosGrubbs = [
+        ...medicionesExistentes.map((m) => ({
+          fecha: m.fecha,
+          valor: m.valor,
         })),
         {
-            fecha: nuevasMediciones[0].fecha,
-            valor: nuevasMediciones[0].valor
-        }
-    ];
+          fecha: nuevasMediciones[0].fecha,
+          valor: nuevasMediciones[0].valor,
+        },
+      ];
 
-    // 2. Ordenar las mediciones cronológicamente.
-    datosGrubbs.sort(
-        (a, b) => a.fecha.getTime() - b.fecha.getTime()
-    );
+      // 2. Ordenar las mediciones cronológicamente.
+      datosGrubbs.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
 
-    // 3. Verificar que existan exactamente 20 mediciones.
-    if (datosGrubbs.length !== 20) {
+      // 3. Verificar que existan exactamente 20 mediciones.
+      if (datosGrubbs.length !== 20) {
         throw new Error(
-            "Se requieren exactamente 20 mediciones para ejecutar Grubbs."
+          "Se requieren exactamente 20 mediciones para ejecutar Grubbs.",
         );
-    }
+      }
 
-    console.log(
-        "Mediciones preparadas para Grubbs:",
-        datosGrubbs.length
-    );
+      console.log("Mediciones preparadas para Grubbs:", datosGrubbs.length);
 
-    // 4. Ejecutar la prueba de Grubbs.
-    const resultadoGrubbs = pruebaGrubbs(datosGrubbs);
+      // 4. Ejecutar la prueba de Grubbs.
+      const resultadoGrubbs = pruebaGrubbs(datosGrubbs);
 
-    // 5. Validar el resultado.
-    if (resultadoGrubbs.error) {
+      // 5. Validar el resultado.
+      if (resultadoGrubbs.error) {
         throw new Error(
-            `No fue posible calcular Grubbs: ${resultadoGrubbs.error}`
+          `No fue posible calcular Grubbs: ${resultadoGrubbs.error}`,
         );
-    }
+      }
 
-    // 6. Validar G calculado y G crítico.
-    const gCalculado = resultadoGrubbs.estadisticoG;
-    const gCritico = resultadoGrubbs.valorCritico;
+      // 6. Validar G calculado y G crítico.
+      const gCalculado = resultadoGrubbs.estadisticoG;
+      const gCritico = resultadoGrubbs.valorCritico;
 
-    if (
+      if (
         typeof gCalculado !== "number" ||
         typeof gCritico !== "number" ||
         !Number.isFinite(gCalculado) ||
         !Number.isFinite(gCritico) ||
         gCalculado < 0 ||
         gCritico <= 0
-    ) {
+      ) {
         throw new Error(
-            "La prueba de Grubbs produjo valores estadísticos inválidos."
+          "La prueba de Grubbs produjo valores estadísticos inválidos.",
         );
-    }
+      }
 
-    // 7. Guardar los resultados de Grubbs.
-    analisis.analisisGrubbs = resultadoGrubbs;
+      // 7. Guardar los resultados de Grubbs.
+      analisis.analisisGrubbs = resultadoGrubbs;
 
-    console.log("Resultado de Grubbs:", {
+      console.log("Resultado de Grubbs:", {
         estadisticoG: gCalculado,
         valorCritico: gCritico,
         esAtipico: resultadoGrubbs.esAtipico,
-        hayEmpate: resultadoGrubbs.hayEmpate
-    });
+        hayEmpate: resultadoGrubbs.hayEmpate,
+      });
 
-    // ==================================================
-    // CASO 1: NO SE DETECTARON VALORES ATÍPICOS
-    // ==================================================
+      // ==================================================
+      // CASO 1: NO SE DETECTARON VALORES ATÍPICOS
+      // ==================================================
 
-    if (gCalculado <= gCritico) {
-
+      if (gCalculado <= gCritico) {
         // Calcular las estadísticas definitivas.
         const estadisticas = calcularEstadisticas(
-            datosGrubbs.map(m => m.valor)
+          datosGrubbs.map((m) => m.valor),
         );
 
         analisis.media = estadisticas.media;
-        analisis.desviacionEstandar =
-            estadisticas.desviacionEstandar;
-        analisis.coeficienteVariacion =
-            estadisticas.coeficienteVariacion;
+        analisis.desviacionEstandar = estadisticas.desviacionEstandar;
+        analisis.coeficienteVariacion = estadisticas.coeficienteVariacion;
 
         // Guardar las 20 mediciones ordenadas.
-        analisis.mediciones = datosGrubbs.map(m => ({
-            fecha: m.fecha,
-            valor: m.valor
+        analisis.mediciones = datosGrubbs.map((m) => ({
+          fecha: m.fecha,
+          valor: m.valor,
         }));
 
         analisis.totalMediciones = 20;
@@ -3657,60 +4043,53 @@ if (esUltimaMedicion) {
         analisis.estado = "completo";
 
         console.log(
-            "Análisis diario completado sin valores atípicos:",
-            analisis._id
+          "Análisis diario completado sin valores atípicos:",
+          analisis._id,
         );
+      }
 
-    }
-
-    // ==================================================
-    // CASO 2: SE DETECTÓ UN POSIBLE VALOR ATÍPICO
-    // ==================================================
-
-    else if (
-        gCalculado > gCritico &&
-        resultadoGrubbs.hayEmpate === false
-    ) {
-
+      // ==================================================
+      // CASO 2: SE DETECTÓ UN POSIBLE VALOR ATÍPICO
+      // ==================================================
+      else if (gCalculado > gCritico && resultadoGrubbs.hayEmpate === false) {
         const indice = resultadoGrubbs.indiceSospechoso;
 
         // Verificar que el índice sea válido.
         if (
-            !Number.isInteger(indice) ||
-            indice < 0 ||
-            indice >= datosGrubbs.length
+          !Number.isInteger(indice) ||
+          indice < 0 ||
+          indice >= datosGrubbs.length
         ) {
-            throw new Error(
-                "Grubbs detectó un atípico, pero no identificó su posición."
-            );
+          throw new Error(
+            "Grubbs detectó un atípico, pero no identificó su posición.",
+          );
         }
 
         const medicionSospechosa = datosGrubbs[indice];
 
         // Marcar la medición como pendiente de revisión.
-        const medicionActualizada =
-            await Medicion.findOneAndUpdate(
-                {
-                    analisisId: analisis._id,
-                    tipoMedicion: "inicial",
-                    fecha: medicionSospechosa.fecha,
-                    valor: medicionSospechosa.valor
-                },
-                {
-                    $set: {
-                        estado: "pendiente_revision"
-                    }
-                },
-                {
-                    new: true,
-                    session
-                }
-            );
+        const medicionActualizada = await Medicion.findOneAndUpdate(
+          {
+            analisisId: analisis._id,
+            tipoMedicion: "inicial",
+            fecha: medicionSospechosa.fecha,
+            valor: medicionSospechosa.valor,
+          },
+          {
+            $set: {
+              estado: "pendiente_revision",
+            },
+          },
+          {
+            new: true,
+            session,
+          },
+        );
 
         if (!medicionActualizada) {
-            throw new Error(
-                "No se encontró la medición sospechosa para revisión."
-            );
+          throw new Error(
+            "No se encontró la medición sospechosa para revisión.",
+          );
         }
 
         analisis.estado = "pendiente_revision";
@@ -3725,22 +4104,16 @@ if (esUltimaMedicion) {
         analisis.mediciones = [];
 
         console.log(
-            "Posible valor atípico detectado:",
-            medicionSospechosa.valor,
-            medicionSospechosa.fecha
+          "Posible valor atípico detectado:",
+          medicionSospechosa.valor,
+          medicionSospechosa.fecha,
         );
+      }
 
-    }
-
-    // ==================================================
-    // CASO 3: EMPATE ESTADÍSTICAMENTE SIGNIFICATIVO
-    // ==================================================
-
-    else if (
-        gCalculado > gCritico &&
-        resultadoGrubbs.hayEmpate === true
-    ) {
-
+      // ==================================================
+      // CASO 3: EMPATE ESTADÍSTICAMENTE SIGNIFICATIVO
+      // ==================================================
+      else if (gCalculado > gCritico && resultadoGrubbs.hayEmpate === true) {
         // No seleccionar arbitrariamente una medición.
         analisis.estado = "requiere_revision_empate";
 
@@ -3754,128 +4127,103 @@ if (esUltimaMedicion) {
         analisis.mediciones = [];
 
         console.warn(
-            "Empate significativo en Grubbs. Requiere revisión:",
-            analisis._id
+          "Empate significativo en Grubbs. Requiere revisión:",
+          analisis._id,
         );
+      }
 
-    }
-
-    // ==================================================
-    // CASO 4: RESULTADO INESPERADO
-    // ==================================================
-
-    else {
+      // ==================================================
+      // CASO 4: RESULTADO INESPERADO
+      // ==================================================
+      else {
         throw new Error(
-            "No fue posible determinar el estado del análisis con los resultados de Grubbs."
+          "No fue posible determinar el estado del análisis con los resultados de Grubbs.",
         );
+      }
+    } // FIN DE if (esUltimaMedicion)
+
+    if (!esUltimaMedicion) {
+      analisis.media = null;
+      analisis.desviacionEstandar = null;
+      analisis.coeficienteVariacion = null;
     }
 
-} // FIN DE if (esUltimaMedicion)
+    // Guardar el análisis.
+    await analisis.save({ session });
 
+    // Confirmar la transacción.
+    await confirmarTransaccion(session);
 
-if (!esUltimaMedicion) {
-    analisis.media = null;
-    analisis.desviacionEstandar = null;
-    analisis.coeficienteVariacion = null;
-}
+    // Responder a Postman.
+    return res.status(201).json({
+      mensaje: "Medición diaria registrada correctamente.",
+      analisisId: analisis._id,
+      estado: analisis.estado,
+      medicion: nuevasMediciones[0],
 
-// Guardar el análisis.
-await analisis.save({ session });
-
-// Confirmar la transacción.
-await confirmarTransaccion(session);
-
-// Responder a Postman.
-return res.status(201).json({
-    mensaje: "Medición diaria registrada correctamente.",
-    analisisId: analisis._id,
-    estado: analisis.estado,
-    medicion: nuevasMediciones[0],
-
-    resumen: {
+      resumen: {
         totalRegistradas,
         medicionesRequeridas: 20,
         faltantes: Math.max(0, 20 - totalRegistradas),
         totalMedicionesValidas: analisis.totalMedicionesValidas,
         analisisCompleto: analisis.estado === "completo",
         requiereRevision: [
-            "pendiente_revision",
-            "requiere_revision_empate"
-        ].includes(analisis.estado)
-    },
+          "pendiente_revision",
+          "requiere_revision_empate",
+        ].includes(analisis.estado),
+      },
 
-    resultadoGrubbs:
-        esUltimaMedicion
-            ? analisis.analisisGrubbs
-            : null
-});
-
-} catch (error) {
-
+      resultadoGrubbs: esUltimaMedicion ? analisis.analisisGrubbs : null,
+    });
+  } catch (error) {
     console.error("Error en registro diario:", error);
 
     const confirmacionDesconocida =
-        typeof error.hasErrorLabel === "function" &&
-        error.hasErrorLabel("UnknownTransactionCommitResult");
+      typeof error.hasErrorLabel === "function" &&
+      error.hasErrorLabel("UnknownTransactionCommitResult");
 
-    if (
-        !confirmacionDesconocida &&
-        session?.inTransaction()
-    ) {
-        try {
-            await session.abortTransaction();
-        } catch (errorAbort) {
-            console.error(
-                "Error al revertir transacción:",
-                errorAbort
-            );
-        }
+    if (!confirmacionDesconocida && session?.inTransaction()) {
+      try {
+        await session.abortTransaction();
+      } catch (errorAbort) {
+        console.error("Error al revertir transacción:", errorAbort);
+      }
     }
 
     if (confirmacionDesconocida) {
-        return res.status(503).json({
-            mensaje:
-                "No se pudo confirmar si la medición quedó registrada.",
-            accion:
-                "Consulta MongoDB antes de repetir la petición."
-        });
+      return res.status(503).json({
+        mensaje: "No se pudo confirmar si la medición quedó registrada.",
+        accion: "Consulta MongoDB antes de repetir la petición.",
+      });
     }
 
     const conflictoEscritura =
-        typeof error.hasErrorLabel === "function" &&
-        error.hasErrorLabel("TransientTransactionError");
+      typeof error.hasErrorLabel === "function" &&
+      error.hasErrorLabel("TransientTransactionError");
 
     if (
-        error.statusCode === 409 ||
-        conflictoEscritura ||
-        error.code === 11000
+      error.statusCode === 409 ||
+      conflictoEscritura ||
+      error.code === 11000
     ) {
-        return res.status(409).json({
-            mensaje:
-                "El análisis fue modificado por otra solicitud " +
-                "o ya existe un registro equivalente.",
-            accion:
-                "Consulta las mediciones guardadas antes de volver a intentar."
-        });
+      return res.status(409).json({
+        mensaje:
+          "El análisis fue modificado por otra solicitud " +
+          "o ya existe un registro equivalente.",
+        accion: "Consulta las mediciones guardadas antes de volver a intentar.",
+      });
     }
 
     return res.status(500).json({
-        mensaje: "Error al registrar la medición diaria.",
-        error: error.message
+      mensaje: "Error al registrar la medición diaria.",
+      error: error.message,
     });
-
-} finally {
-
+  } finally {
     if (session) {
-        await session.endSession();
+      await session.endSession();
     }
-
-}
-
+  }
 }); // FIN DEL ENDPOINT registrar-diario
-
-
-
 
 const iniciarServidor = async () => {
   await conectarDB();
@@ -3884,5 +4232,365 @@ const iniciarServidor = async () => {
     console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
   });
 };
+
+async function obtenerConjuntoGrubbs({
+  prueba,
+  nivelControl,
+  lote,
+  equipo,
+  session = null,
+}) {
+  const filtro = {
+    prueba,
+    nivelControl,
+    lote,
+    equipo,
+    estado: "valida",
+    tipoMedicion: "inicial",
+    corridaId: { $ne: null },
+    analisisId: null,
+  };
+
+  let consulta = Medicion.find(filtro).sort({ fecha: 1, _id: 1 }).limit(20);
+
+  if (session) {
+    consulta = consulta.session(session);
+  }
+
+  const mediciones = await consulta.lean();
+
+  return {
+    nivelControl,
+    totalSeleccionadas: mediciones.length,
+    conjuntoCompleto: mediciones.length === 20,
+    mediciones,
+  };
+}
+
+function prepararAnalisisGrubbs(mediciones) {
+  if (!Array.isArray(mediciones) || mediciones.length !== 20) {
+    throw new Error(
+      "El análisis de Grubbs requiere exactamente 20 mediciones.",
+    );
+  }
+
+  const datos = mediciones.map((medicion) => ({
+    fecha: medicion.fecha,
+    valor: medicion.valor,
+  }));
+
+  const resultado = pruebaGrubbs(datos);
+
+  if (!resultado || resultado.error) {
+    throw new Error(
+      resultado?.error || "No se pudo calcular la prueba de Grubbs.",
+    );
+  }
+
+  let estado = "completo";
+
+  if (resultado.requiereRevisionEmpate) {
+    estado = "requiere_revision_empate";
+  } else if (resultado.esAtipico) {
+    estado = "pendiente_revision";
+
+    const sospechosa = mediciones[resultado.indiceSospechoso];
+
+    if (!sospechosa) {
+      throw new Error("No se pudo identificar la medición sospechosa.");
+    }
+
+    resultado.medicionSospechosa = {
+      id: sospechosa._id,
+      fecha: sospechosa.fecha,
+      valor: sospechosa.valor,
+      nivelControl: sospechosa.nivelControl,
+    };
+  }
+
+  return {
+    estado,
+    resultadoGrubbs: resultado,
+  };
+}
+
+async function vincularMedicionesAnalisis({ mediciones, analisisId, session }) {
+  // ==========================================
+  // VALIDAR DATOS
+  // ==========================================
+
+  if (!Array.isArray(mediciones) || mediciones.length !== 20) {
+    throw new Error(
+      "Se requieren exactamente 20 mediciones para vincular el análisis.",
+    );
+  }
+
+  if (!mongoose.isValidObjectId(analisisId)) {
+    throw new Error("El identificador del análisis no es válido.");
+  }
+
+  if (!session || !session.inTransaction()) {
+    throw new Error(
+      "La vinculación debe realizarse dentro de una transacción.",
+    );
+  }
+
+  const ids = mediciones.map((medicion) => medicion._id);
+
+
+  // comprobar que todas las mediciones tengan identificadores válidos
+  if (!ids.every((id) => mongoose.isValidObjectId(id))) {
+    throw new Error(
+      "El conjunto contiene identificadores de medición inválidos."
+    );
+  }
+  
+  // Comprobar que no existan identificadores repetidos
+  const idsUnicos = new Set(ids.map((id) => String(id)));
+
+  if (idsUnicos.size !== 20) {
+    throw new Error("El conjunto contiene mediciones duplicadas.");
+  }
+
+  // ==========================================
+  // VINCULAR SOLO MEDICIONES DISPONIBLES
+  // ==========================================
+
+  const resultado = await Medicion.updateMany(
+    {
+      _id: { $in: ids },
+      prueba: mediciones[0].prueba,
+      nivelControl: mediciones[0].nivelControl,
+      lote: mediciones[0].lote,
+      equipo: mediciones[0].equipo,
+      analisisId: null,
+      estado: "valida",
+      tipoMedicion: "inicial",
+      corridaId: { $ne: null },
+    },
+    {
+      $set: {
+        analisisId,
+      },
+    },
+    { session },
+  );
+
+  // ==========================================
+  // COMPROBAR QUE SE VINCULARON LAS 20
+  // ==========================================
+
+  if (resultado.matchedCount !== 20) {
+    throw new Error(
+      "No fue posible vincular las 20 mediciones. " +
+        "Alguna ya pertenece a otro análisis o cambió de estado.",
+    );
+  }
+
+  return {
+    totalVinculadas: resultado.matchedCount,
+    analisisId,
+  };
+}
+
+async function crearAnalisisGrubbsAutomatico({
+  prueba,
+  nivelControl,
+  lote,
+  equipo,
+  session,
+}) {
+  if (!session || !session.inTransaction()) {
+    throw new Error("El análisis debe crearse dentro de una transacción.");
+  }
+
+  // ==========================================
+  // 1. COMPROBAR SI EXISTE UN ANÁLISIS ACTIVO
+  // ==========================================
+
+  const analisisExistente = await Analisis.findOne({
+    prueba,
+    nivelControl,
+    lote,
+    equipo,
+    estado: {
+      $in: [
+        "en_recopilacion",
+        "pendiente_revision",
+        "requiere_reemplazo",
+        "requiere_revision_empate",
+      ],
+    },
+  }).session(session);
+
+  if (analisisExistente) {
+    return {
+      creado: false,
+      motivo: "Ya existe un análisis activo.",
+      analisisId: analisisExistente._id,
+      estado: analisisExistente.estado,
+    };
+  }
+
+  // ==========================================
+  // 2. OBTENER LAS MEDICIONES DISPONIBLES
+  // ==========================================
+
+  const conjunto = await obtenerConjuntoGrubbs({
+    prueba,
+    nivelControl,
+    lote,
+    equipo,
+    session,
+  });
+
+  if (!conjunto.conjuntoCompleto) {
+    return {
+      creado: false,
+      motivo: "Conjunto incompleto.",
+      medicionesAcumuladas: conjunto.totalSeleccionadas,
+      medicionesFaltantes: 20 - conjunto.totalSeleccionadas,
+    };
+  }
+
+  // ==========================================
+  // 3. CALCULAR GRUBBS
+  // ==========================================
+
+  const preparacion = prepararAnalisisGrubbs(conjunto.mediciones);
+
+  const resultadoGrubbs = preparacion.resultadoGrubbs;
+  const estado = preparacion.estado;
+
+  // ==========================================
+  // 4. PREPARAR ESTADÍSTICAS
+  // ==========================================
+
+  const valores = conjunto.mediciones.map((medicion) => medicion.valor);
+
+  const estadisticas = calcularEstadisticas(valores);
+
+  // ==========================================
+  // ESTADÍSTICAS PRELIMINARES Y DEFINITIVAS
+  // ==========================================
+
+  const estadisticasDefinitivas = estado === "completo";
+
+  const mediaFinal = estadisticasDefinitivas ? estadisticas.media : null;
+
+  const desviacionFinal = estadisticasDefinitivas
+    ? estadisticas.desviacionEstandar
+    : null;
+
+  const coeficienteVariacionFinal = estadisticasDefinitivas
+    ? estadisticas.coeficienteVariacion
+    : null;
+
+  // ==========================================
+  // 5. CREAR EL DOCUMENTO DE ANÁLISIS
+  // ==========================================
+
+  const analisisId = new mongoose.Types.ObjectId();
+
+  const [nuevoAnalisis] = await Analisis.create(
+    [
+      {
+        _id: analisisId,
+        prueba,
+        nivelControl,
+        lote,
+        equipo,
+
+        media: mediaFinal,
+        desviacionEstandar: desviacionFinal,
+        coeficienteVariacion: coeficienteVariacionFinal,
+
+        totalMediciones: 20,
+        medicionesRequeridas: 20,
+
+        // Contar únicamente las mediciones que no
+        // requieren investigación individual.
+       
+        // contar las mediciones aceptadas según el estado del análisis
+        totalMedicionesValidas:
+          estado === "pendiente_revision"
+            ? 19
+            : estado === "requiere_revision_empate"
+              ? 0
+              : 20,
+
+
+        mediciones: conjunto.mediciones.map((medicion) => ({
+          fecha: medicion.fecha,
+          valor: medicion.valor,
+        })),
+
+        analisisGrubbs: resultadoGrubbs,
+        estado,
+      },
+    ],
+    { session },
+  );
+
+  // ==========================================
+  // 6. VINCULAR LAS 20 MEDICIONES
+  // ==========================================
+
+  await vincularMedicionesAnalisis({
+    mediciones: conjunto.mediciones,
+    analisisId,
+    session,
+  });
+
+  // ==========================================
+  // 7. MARCAR EL ATÍPICO PARA INVESTIGACIÓN
+  // ==========================================
+
+  if (estado === "pendiente_revision") {
+    const sospechosa = resultadoGrubbs.medicionSospechosa;
+
+    if (!sospechosa?.id) {
+      throw new Error("No se identificó la medición sospechosa.");
+    }
+
+    const actualizacion = await Medicion.updateOne(
+      {
+        _id: sospechosa.id,
+        analisisId,
+        estado: "valida",
+      },
+      {
+        $set: {
+          estado: "pendiente_revision",
+        },
+      },
+      { session },
+    );
+
+    if (actualizacion.matchedCount !== 1) {
+      throw new Error("No se pudo marcar la medición sospechosa.");
+    }
+  }
+
+  // ==========================================
+  // 8. DEVOLVER RESULTADO
+  // ==========================================
+
+  return {
+    creado: true,
+    analisisId: nuevoAnalisis._id,
+    nivelControl,
+    estado: nuevoAnalisis.estado,
+    totalMediciones: 20,
+    esAtipico: resultadoGrubbs.esAtipico,
+    requiereRevisionEmpate: resultadoGrubbs.requiereRevisionEmpate,
+  };
+}
+
+async function cancelarTransaccionSiActiva(session) {
+  if (session && session.inTransaction()) {
+    await session.abortTransaction();
+  }
+}
 
 iniciarServidor();

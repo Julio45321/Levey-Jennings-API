@@ -307,76 +307,51 @@ function mostrarResultados(analisis) {
 
   // Crear las filas de la tabla
 
-  const filas = [
-    ["Número de mediciones", "n", grubbs.numeroMediciones, "Mediciones"],
+  
+const filas = [
+    ["Número de mediciones", "n",
+        grubbs.numeroMediciones, "datos"],
 
-    ["Media", "Σx / n", grubbs.media, "Según prueba"],
+    ["Media aritmética", "Σxi / n",
+        grubbs.media, ""],
 
-    [
-      "Desviación estándar",
-      "√[Σ(x - media)² / (n - 1)]",
-      grubbs.desviacionEstandar,
-      "Según prueba",
-    ],
+    ["Desviación estándar", "s",
+        grubbs.desviacionEstandar, ""],
 
-    [
-      "Valor mínimo",
-      "Mínimo de los valores",
-      grubbs.valorMinimo,
-      "Según prueba",
-    ],
+    ["Valor mínimo", "xmin",
+        grubbs.valorMinimo, ""],
 
-    [
-      "Valor máximo",
-      "Máximo de los valores",
-      grubbs.valorMaximo,
-      "Según prueba",
-    ],
+    ["Valor máximo", "xmax",
+        grubbs.valorMaximo, ""],
 
-    [
-      "Distancia inferior",
-      "Media - mínimo",
-      grubbs.distanciaInferior,
-      "Según prueba",
-    ],
+    ["Distancia inferior", "|Media - valor mínimo|",
+        grubbs.distanciaInferior, ""],
 
-    [
-      "Distancia superior",
-      "Máximo - media",
-      grubbs.distanciaSuperior,
-      "Según prueba",
-    ],
+    ["Distancia superior", "|Valor máximo - media|",
+        grubbs.distanciaSuperior, ""],
 
-    [
-      "Distancia máxima",
-      "Máximo de las distancias",
-      grubbs.distanciaMaxima,
-      "Según prueba",
-    ],
+    ["Distancia máxima", "max(|xi - media|)",
+        grubbs.distanciaMaxima, ""],
 
-    [
-      "Estadístico G",
-      "Distancia máxima / DE",
-      grubbs.estadisticoG,
-      "Adimensional",
-    ],
+    ["Estadístico G", "Distancia máxima / s",
+        grubbs.estadisticoG, "Adimensional"],
 
-    [
-      "Valor crítico G",
-      "Grubbs bilateral, α = 0.05",
-      grubbs.valorCritico,
-      "Adimensional",
-    ],
+    ["Valor crítico", "G crítico",
+        grubbs.valorCritico, "Adimensional"],
 
-    ["Nivel de significancia", "α", grubbs.nivelSignificancia, "Adimensional"],
+    ["Nivel de significancia", "α",
+        grubbs.nivelSignificancia, "Adimensional"],
 
-    [
-      "Coeficiente de variación",
-      "(DE / |Media|) × 100",
-      coeficienteVariacion,
-      "%",
-    ],
-  ];
+    ["Valor sospechoso", "Mayor distancia absoluta",
+        grubbs.valorSospechoso, ""],
+
+    ["Lado sospechoso", "Superior o inferior",
+        grubbs.ladoSospechoso, ""],
+
+    ["Resultado de Grubbs", "Comparar G con G crítico",
+        grubbs.resultado, ""]
+];
+
 
   filas.forEach((fila) => {
     const tr = document.createElement("tr");
@@ -2515,7 +2490,7 @@ const mensajeGuardarCorrida = document.getElementById(
     "mensajeGuardarCorrida"
 );
 
-btnGuardarCorrida.addEventListener("click", () => {
+btnGuardarCorrida.addEventListener("click", async () => {
 
     const prueba = document.getElementById("prueba").value.trim();
 
@@ -2635,12 +2610,97 @@ btnGuardarCorrida.addEventListener("click", () => {
         mediciones
     };
 
-    console.log("DATOS DE LA CORRIDA:", datosCorrida);
+  
+console.log("DATOS DE LA CORRIDA:", datosCorrida);
+
+// Evitar que el usuario guarde dos veces la misma corrida
+btnGuardarCorrida.disabled = true;
+
+mensajeGuardarCorrida.textContent =
+    "Guardando corrida de control en MongoDB...";
+
+mensajeGuardarCorrida.style.color = "#123b5d";
+
+try {
+
+    const respuesta = await fetch(
+        "/api/control/registrar-corrida",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(datosCorrida)
+        }
+    );
+
+    const resultado = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            resultado.mensaje ||
+            "No se pudo guardar la corrida."
+        );
+    }
+
+    console.log("CORRIDA GUARDADA:", resultado);
+
+console.log("DATOS COMPLETOS:", datosCorrida);
+
+console.log(
+    "NIVELES EN DATOS CORRIDA:",
+    datosCorrida.niveles
+);
+
+console.log(
+    "MEDICIONES EN DATOS CORRIDA:",
+    datosCorrida.mediciones
+);
+
 
     mensajeGuardarCorrida.textContent =
-        "Datos validados correctamente. Revisa la consola del navegador.";
+        resultado.mensaje ||
+        "Corrida de control registrada correctamente.";
 
     mensajeGuardarCorrida.style.color = "green";
+
+    //llamada a la funcion 
+
+// Consultar el progreso de Grubbs
+// después de guardar correctamente la corrida.
+
+
+await consultarProgresoGrubbsPorNivel(
+    datosCorrida.prueba,
+    datosCorrida.lote,
+    datosCorrida.equipo,
+    [
+        ...new Set(
+            datosCorrida.mediciones.map(
+                medicion => medicion.nivelControl
+            )
+        )
+    ]
+);
+
+
+
+    // Mantener deshabilitado el botón después del éxito
+    // para evitar duplicar accidentalmente esta corrida.
+
+} catch (error) {
+
+    console.error("ERROR AL GUARDAR CORRIDA:", error);
+
+    mensajeGuardarCorrida.textContent =
+        error.message;
+
+    mensajeGuardarCorrida.style.color = "red";
+
+    // Permitir reintentar si ocurrió un error
+    btnGuardarCorrida.disabled = false;
+}
+
 
 });
 }
@@ -2695,6 +2755,231 @@ function obtenerResultadosPorNivel() {
     return resultados;
 }
 });
+
+
+/* ==========================================
+   CONSULTAR PROGRESO DE GRUBBS POR NIVEL
+========================================== */
+
+async function consultarProgresoGrubbsPorNivel(
+    prueba,
+    lote,
+    equipo,
+    niveles
+) {
+
+    const seccion = document.getElementById(
+        "seccionProgresoGrubbs"
+    );
+
+    const contenedor = document.getElementById(
+        "contenedorProgresoGrubbs"
+    );
+
+    const mensaje = document.getElementById(
+        "mensajeProgresoGrubbs"
+    );
+
+    seccion.hidden = false;
+    contenedor.innerHTML = "";
+
+    mensaje.textContent =
+        "Consultando mediciones registradas...";
+
+    mensaje.style.color = "#123b5d";
+
+    try {
+
+        for (const nivel of niveles) {
+
+            const nombreNivel =
+                typeof nivel === "string"
+                    ? nivel
+                    : nivel.nombre;
+
+            const parametros = new URLSearchParams({
+                prueba,
+                nivelControl: nombreNivel,
+                lote,
+                equipo
+            });
+
+            const respuesta = await fetch(
+                `/api/control/mediciones-por-nivel?${parametros}`
+            );
+
+            const resultado = await respuesta.json();
+
+            if (!respuesta.ok) {
+                throw new Error(
+                    resultado.mensaje ||
+                    "No se pudo consultar el progreso."
+                );
+            }
+
+            const progreso = resultado.progresoGrubbs;
+
+            const acumuladas =
+                progreso.medicionesAcumuladas;
+
+            const faltantes =
+                progreso.medicionesFaltantes;
+
+            const porcentaje = Math.min(
+                100,
+                (acumuladas / 20) * 100
+            );
+
+            const tarjeta = document.createElement("div");
+
+            tarjeta.className = "subtarjeta";
+
+            const titulo = document.createElement("h4");
+            titulo.textContent = nombreNivel;
+
+            const contador = document.createElement("p");
+            contador.textContent =
+                `Mediciones registradas: ${acumuladas} de 20`;
+
+            const barra = document.createElement("div");
+            barra.className = "barra-progreso";
+
+            const relleno = document.createElement("div");
+            relleno.className = "barra-progreso-relleno";
+            relleno.style.width = `${porcentaje}%`;
+
+            barra.appendChild(relleno);
+
+            const estado = document.createElement("p");
+
+            if (progreso.listoParaGrubbs) {
+
+                estado.textContent =
+                    "Conjunto completo. Grubbs disponible.";
+
+                estado.style.color = "green";
+
+            } else {
+
+                estado.textContent =
+                    `Faltan ${faltantes} mediciones para Grubbs.`;
+
+                estado.style.color = "#b45309";
+            }
+
+            tarjeta.appendChild(titulo);
+            tarjeta.appendChild(contador);
+            tarjeta.appendChild(barra);
+            tarjeta.appendChild(estado);
+
+
+// Mostrar resultados cuando Grubbs ya fue ejecutado
+const controlGrubbs = resultado.controlGrubbs;
+
+if (
+    progreso.listoParaGrubbs &&
+    controlGrubbs &&
+    controlGrubbs.resultado
+) {
+    const grubbs = controlGrubbs.resultado;
+
+    const seccionResultado = document.createElement("div");
+    seccionResultado.className = "resultado-grubbs-nivel";
+
+    const tituloResultado = document.createElement("h4");
+    tituloResultado.textContent = "Resultados de Grubbs";
+
+    seccionResultado.appendChild(tituloResultado);
+
+    const tabla = document.createElement("table");
+
+    const encabezado = document.createElement("thead");
+    const filaEncabezado = document.createElement("tr");
+
+  ["Parámetro", "Cálculo", "Resultado", "Unidades"].forEach(texto => {
+        const th = document.createElement("th");
+        th.textContent = texto;
+        filaEncabezado.appendChild(th);
+    });
+
+    encabezado.appendChild(filaEncabezado);
+    tabla.appendChild(encabezado);
+
+    const cuerpo = document.createElement("tbody");
+
+    const filas = [
+        ["Media", grubbs.media],
+        ["Desviación estándar", grubbs.desviacionEstandar],
+        ["Valor mínimo", grubbs.valorMinimo],
+        ["Valor máximo", grubbs.valorMaximo],
+        ["Estadístico G", grubbs.estadisticoG],
+        ["Valor crítico", grubbs.valorCritico]
+    ];
+
+  
+filas.forEach(([parametro, calculo, valor, unidades]) => {
+
+    const tr = document.createElement("tr");
+
+    [parametro, calculo, valor, unidades].forEach(dato => {
+
+        const td = document.createElement("td");
+
+        td.textContent =
+            typeof dato === "number"
+                ? Number(dato.toFixed(4))
+                : (dato ?? "");
+
+        tr.appendChild(td);
+    });
+
+    cuerpo.appendChild(tr);
+});
+
+
+    tabla.appendChild(cuerpo);
+    seccionResultado.appendChild(tabla);
+
+    const interpretacion = document.createElement("p");
+
+    if (grubbs.esAtipico) {
+        interpretacion.textContent =
+            `Posible valor atípico detectado: ` +
+            `${grubbs.valorSospechoso}. ` +
+            `Se requiere investigación y documentación.`;
+
+        interpretacion.style.color = "red";
+    } else {
+        interpretacion.textContent =
+            "No se detectaron valores atípicos.";
+
+        interpretacion.style.color = "green";
+    }
+
+    seccionResultado.appendChild(interpretacion);
+    tarjeta.appendChild(seccionResultado);
+}
+
+
+            contenedor.appendChild(tarjeta);
+        }
+
+        mensaje.textContent =
+            "Progreso actualizado correctamente.";
+
+        mensaje.style.color = "green";
+
+    } catch (error) {
+
+        console.error(
+            "Error al consultar progreso de Grubbs:",
+            error
+        );
+
+        mensaje.textContent = error.message;
+        mensaje.style.color = "red";
+    }
+}
 
 // Mostrar una fila al iniciar
 agregarMedicionDiaria();

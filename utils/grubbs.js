@@ -84,15 +84,42 @@ function pruebaGrubbs(mediciones, nivelSignificancia = 0.05) {
     ((n - 1) / Math.sqrt(n)) *
     Math.sqrt(Math.pow(tCritico, 2) / (n - 2 + Math.pow(tCritico, 2)));
 
-  // Resultado
-  const esAtipico = G > Gcritico;
+  
+  // ==========================================
+  // RESULTADO DE LA PRUEBA DE GRUBBS
+  // ==========================================
+
+  const superaValorCritico = G > Gcritico;
+
+  // Un empate entre extremos requiere revisión
+  // cuando el estadístico supera el valor crítico.
+  const requiereRevisionEmpate =
+    hayEmpate && superaValorCritico;
+
+  // Solo identificar un valor atípico individual
+  // cuando no existe empate entre los extremos.
+  const esAtipico =
+    superaValorCritico && !hayEmpate;
+
+  let resultado = "";
+
+  if (requiereRevisionEmpate) {
+    resultado =
+      "Empate entre extremos con posible atipicidad: requiere revisión";
+  } else if (esAtipico) {
+    resultado = "Posible valor atípico detectado";
+  } else {
+    resultado = "No se detectaron valores atípicos";
+  }
 
   return {
     metodo: "Prueba de Grubbs",
     numeroMediciones: n,
 
     media: Number(media.toFixed(4)),
-    desviacionEstandar: Number(desviacionEstandar.toFixed(4)),
+    desviacionEstandar: Number(
+      desviacionEstandar.toFixed(4)
+    ),
 
     valorMinimo,
     fechaValorMinimo: medicionMinima.fecha,
@@ -100,30 +127,36 @@ function pruebaGrubbs(mediciones, nivelSignificancia = 0.05) {
     valorMaximo,
     fechaValorMaximo: medicionMaxima.fecha,
 
-    distanciaInferior: Number(distanciaInferior.toFixed(4)),
-    distanciaSuperior: Number(distanciaSuperior.toFixed(4)),
-    distanciaMaxima: Number(distanciaMaxima.toFixed(4)),
+    distanciaInferior: Number(
+      distanciaInferior.toFixed(4)
+    ),
+    distanciaSuperior: Number(
+      distanciaSuperior.toFixed(4)
+    ),
+    distanciaMaxima: Number(
+      distanciaMaxima.toFixed(4)
+    ),
 
     valorSospechoso,
     indiceSospechoso,
 
-    fechaValorSospechoso: medicionSospechosa ? medicionSospechosa.fecha : null,
+    fechaValorSospechoso: medicionSospechosa
+      ? medicionSospechosa.fecha
+      : null,
 
     ladoSospechoso,
     hayEmpate,
 
-estadisticoG: G,
-valorCritico: Gcritico,
+    estadisticoG: G,
+    valorCritico: Gcritico,
 
     nivelSignificancia: alfa,
 
-    resultado: !esAtipico
-      ? "No se detectaron valores atípicos"
-      : hayEmpate
-        ? "Empate entre extremos con posible atipicidad: requiere revisión"
-        : "Posible valor atípico detectado",
+    superaValorCritico,
+    requiereRevisionEmpate,
+    esAtipico,
 
-    esAtipico: esAtipico && !hayEmpate,
+    resultado,
   };
 }
 

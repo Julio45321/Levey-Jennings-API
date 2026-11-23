@@ -110,35 +110,6 @@ estado: {
 
 
 /*
- * Evitar análisis iniciales activos duplicados.
- * Se permiten múltiples análisis históricos completos.
- */
-analisisSchema.index(
-    {
-        prueba: 1,
-        nivelControl: 1,
-        lote: 1,
-        equipo: 1
-    },
-    {
-        unique: true,
-        name: "unico_analisis_activo",
-        
-        partialFilterExpression: {
-            estado: {
-                $in: [
-                    "en_recopilacion",
-                    "pendiente_revision",
-                    "requiere_reemplazo"
-                ]
-            }
-        }
-    }
-);
-
-
-
-/*
  * Nuevo índice único para proteger todos los
  * estados activos, incluyendo revisión de empate.
  */
