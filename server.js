@@ -233,16 +233,38 @@ app.post("/api/control/registrar-corrida", async (req, res) => {
     // Generar el identificador de la corrida
     const corridaId = new mongoose.Types.ObjectId();
 
+ 
     // Preparar los documentos de las mediciones
-    const nuevasMediciones = mediciones.map((medicion) => ({
+    // Conservamos el orden analítico recibido desde la web.
+
+    const nuevasMediciones = mediciones.map((medicion, indice) => ({
       prueba: prueba.trim(),
       lote: lote.trim(),
       equipo: equipo.trim(),
+
       nivelControl: medicion.nivelControl,
+
       valor: medicion.valor,
-      fecha: new Date(`${medicion.fecha}T12:00:00.000Z`),
+
+      fecha: new Date(
+        `${medicion.fecha}T12:00:00.000Z`
+      ),
+
       corridaId,
+
+      // Número de medición dentro de su nivel
+      numeroMedicion: medicion.numeroMedicion,
+
+      // Posición en la secuencia de captura
+      ordenAnalitico: indice + 1,
+
+      // Sin hora real confirmada, no inventamos una
+      fechaHoraMedicion: null,
+
       tipoMedicion: "inicial",
+
+      // Estado inicial del flujo de Grubbs;
+      // no representa aceptación por Westgard
       estado: "valida",
     }));
 
@@ -1837,6 +1859,22 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     const { analisisId } = req.params;
     const { fecha, valor } = req.body || {};
 
+
+    // obtener la clave de idempotencia enviada en la solicitud
+    const claveIdempotencia = req.get("Idempotency-Key");
+
+    // validar que la clave tenga un formato correcto
+    if (
+      typeof claveIdempotencia !== "string" ||
+      !/^[a-zA-Z0-9_-]{8,100}$/.test(claveIdempotencia)
+    ) {
+      return res.status(400).json({
+        mensaje:
+          "Debes proporcionar una clave Idempotency-Key válida de 8 a 100 caracteres."
+      });
+    }
+
+
     // 1. Validar los datos recibidos
     if (!mongoose.isValidObjectId(analisisId)) {
       return res.status(400).json({
@@ -1859,6 +1897,39 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     // 2. Iniciar la transacción antes de consultar o modificar
     session = await mongoose.startSession();
     session.startTransaction();
+
+
+    // consultar si esta solicitud de reemplazo ya fue registrada
+    const medicionExistente = await Medicion.findOne({
+      claveIdempotencia
+    });
+
+    if (medicionExistente) {
+      // comprobar que la clave corresponde a la misma operación
+      const mismaOperacion =
+        String(medicionExistente.analisisId) === String(analisisId) &&
+        medicionExistente.fecha.toISOString().slice(0, 10) === fecha &&
+        medicionExistente.valor === valor;
+
+      // impedir reutilizar una clave con datos diferentes
+      if (!mismaOperacion) {
+        return res.status(409).json({
+          mensaje:
+            "La clave de idempotencia ya fue utilizada con datos diferentes.",
+          codigo: "CLAVE_IDEMPOTENCIA_EN_CONFLICTO"
+        });
+      }
+
+      // devolver la medición existente sin registrar otra
+      return res.status(200).json({
+        mensaje:
+          "Esta solicitud de reemplazo ya fue procesada anteriormente.",
+        codigo: "SOLICITUD_REPETIDA",
+        analisisId: medicionExistente.analisisId,
+        medicion: medicionExistente
+      });
+    }
+
 
     const analisis = await Analisis.findById(analisisId).session(session);
 
@@ -1899,6 +1970,26 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       });
     }
 
+
+    // comprobar que no existan reemplazos pendientes de revisión
+    const reemplazosPendientes = await Medicion.countDocuments({
+      analisisId: analisis._id,
+      tipoMedicion: "inicial",
+      estado: "pendiente_revision"
+    }).session(session);
+
+    // impedir registrar otro reemplazo mientras exista uno pendiente
+    if (reemplazosPendientes > 0) {
+      await session.abortTransaction();
+
+      return res.status(409).json({
+        mensaje:
+          "Existe una medición pendiente de revisión. Debes resolverla antes de registrar otro reemplazo.",
+        totalPendientes: reemplazosPendientes
+      });
+    }
+
+
     if (excluidas.length === 0 || validas.length >= requeridas) {
       await session.abortTransaction();
       return res.status(409).json({
@@ -1927,6 +2018,8 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     }
 
     // 5. Crear la medición de reemplazo
+    
+    // crear la medición de reemplazo con su clave de idempotencia
     const [nuevaMedicion] = await Medicion.create(
       [
         {
@@ -1938,11 +2031,13 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
           valor,
           tipoMedicion: "inicial",
           analisisId: analisis._id,
-          estado: "pendiente_revision",
-        },
+          claveIdempotencia,
+          estado: "pendiente_revision"
+        }
       ],
-      { session },
+      { session }
     );
+
 
     // 6. Recuperar las mediciones candidatas
     const candidatas = await Medicion.find({
@@ -1962,9 +2057,14 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       nuevaMedicion.estado = "valida";
       await nuevaMedicion.save({ session });
 
-      analisis.totalMedicionesValidas = candidatas.length;
-      analisis.totalMediciones = candidatas.length;
-      analisis.estado = "requiere_reemplazo";
+      // actualizar el número de mediciones válidas
+        analisis.totalMedicionesValidas = candidatas.length;
+
+        // contar todas las mediciones históricas, incluidas las excluidas
+        analisis.totalMediciones = mediciones.length + 1;
+
+        // mantener el análisis esperando los reemplazos faltantes
+        analisis.estado = "requiere_reemplazo";
       analisis.media = null;
       analisis.desviacionEstandar = null;
       analisis.coeficienteVariacion = null;
@@ -1996,21 +2096,33 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
 
     const resultadoGrubbs = pruebaGrubbs(datosGrubbs);
 
-    if (
-      !resultadoGrubbs ||
-      resultadoGrubbs.error ||
-      resultadoGrubbs.hayEmpate
-    ) {
+  
+    // verificar que la prueba de grubbs se haya ejecutado correctamente
+    if (!resultadoGrubbs || resultadoGrubbs.error) {
       await session.abortTransaction();
 
       return res.status(422).json({
         mensaje: "No se pudo completar la evaluación de Grubbs.",
         motivo:
           resultadoGrubbs?.error ||
-          "Se requiere revisar un empate estadístico.",
-        reemplazoRegistrado: false,
+          "La prueba de Grubbs no devolvió un resultado válido.",
+        reemplazoRegistrado: false
       });
     }
+
+    // impedir una decisión automática cuando existe un empate significativo
+    if (resultadoGrubbs.requiereRevisionEmpate) {
+      await session.abortTransaction();
+
+      return res.status(422).json({
+        mensaje:
+          "La prueba de Grubbs detectó un empate que requiere revisión.",
+        motivo:
+          "No se puede seleccionar automáticamente una única medición sospechosa.",
+        reemplazoRegistrado: false
+      });
+    }
+
 
     analisis.analisisGrubbs = resultadoGrubbs;
 
@@ -2101,9 +2213,17 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
       estado: "excluida",
     }).session(session);
 
+  
+    // actualizar el número de mediciones aceptadas
     analisis.totalMedicionesValidas = totalValidas;
-    analisis.totalMediciones = candidatas.length;
+
+    // contar todas las mediciones registradas, incluidas las excluidas
+    analisis.totalMediciones =
+      totalValidas + totalExcluidas + pendientesFinales;
+
+    // incrementar la versión del proceso de reemplazo
     analisis.versionReemplazos += 1;
+
 
     if (
       analisis.estado === "completo" &&
@@ -2147,6 +2267,43 @@ app.post("/api/control/agregar-reemplazo/:analisisId", async (req, res) => {
     if (session && session.inTransaction()) {
       await session.abortTransaction().catch(console.error);
     }
+
+
+    // detectar una clave de idempotencia duplicada
+    if (error.code === 11000) {
+      // buscar la medición que ya tiene registrada esa clave
+      const medicionExistente = await Medicion.findOne({
+        claveIdempotencia: req.get("Idempotency-Key")
+      }).catch(() => null);
+
+      // comprobar si corresponde exactamente a la misma solicitud
+      if (medicionExistente) {
+        const { analisisId } = req.params;
+        const { fecha, valor } = req.body || {};
+
+        const mismaOperacion =
+          String(medicionExistente.analisisId) === String(analisisId) &&
+          medicionExistente.fecha.toISOString().slice(0, 10) === fecha &&
+          medicionExistente.valor === valor;
+
+        // devolver la medición existente cuando sea un reintento
+        if (mismaOperacion) {
+          return res.status(200).json({
+            mensaje: "Esta solicitud de reemplazo ya fue procesada anteriormente.",
+            codigo: "SOLICITUD_REPETIDA",
+            analisisId: medicionExistente.analisisId,
+            medicion: medicionExistente
+          });
+        }
+      }
+
+      // rechazar una clave utilizada con datos diferentes
+      return res.status(409).json({
+        mensaje: "La clave de idempotencia ya fue utilizada con datos diferentes.",
+        codigo: "CLAVE_IDEMPOTENCIA_EN_CONFLICTO"
+      });
+    }
+
 
     const conflicto =
       error.code === 112 ||
@@ -2383,11 +2540,6 @@ const medicion = await Medicion.findById(id)
 
         return m;
       });
-
-      // generar la firma de las 20 mediciones investigadas
-      medicion.firmaConjuntoRevision =
-        generarFirmaConjunto(conjuntoActualizado);
-
 
       // Generar una firma de las mediciones evaluadas
       medicion.firmaConjuntoRevision = generarFirmaConjunto(medicionesConjunto);
@@ -2940,6 +3092,130 @@ app.post("/api/levey-jennings/grafica", async (req, res) => {
     });
   }
 });
+
+//Endpoint para generar la grafica automaticamente
+
+
+app.get("/api/control/analisis/:analisisId/grafica", async (req, res) => {
+  try {
+    const { analisisId } = req.params;
+
+    // validar el identificador del análisis
+    if (!mongoose.isValidObjectId(analisisId)) {
+      return res.status(400).json({
+        mensaje: "El ID del análisis no es válido."
+      });
+    }
+
+    // consultar el análisis en mongodb
+    const analisis = await Analisis.findById(analisisId);
+
+    if (!analisis) {
+      return res.status(404).json({
+        mensaje: "No se encontró el análisis."
+      });
+    }
+
+    // verificar que el análisis esté completo
+    if (analisis.estado !== "completo") {
+      return res.status(409).json({
+        mensaje: "El análisis debe estar completo para generar la gráfica.",
+        estado: analisis.estado
+      });
+    }
+
+    // recuperar exclusivamente las mediciones válidas
+    const mediciones = await Medicion.find({
+      analisisId: analisis._id,
+      tipoMedicion: "inicial",
+      estado: "valida"
+    }).sort({ fecha: 1, _id: 1 });
+
+    // verificar que exista el conjunto completo
+    const requeridas = analisis.medicionesRequeridas || 20;
+
+    if (mediciones.length !== requeridas) {
+      return res.status(409).json({
+        mensaje: "El análisis no tiene el número requerido de mediciones válidas.",
+        requeridas,
+        encontradas: mediciones.length
+      });
+    }
+
+    // preparar los resultados para la gráfica
+    const resultados = mediciones.map((medicion) => ({
+      fecha: medicion.fecha.toISOString().slice(0, 10),
+      valor: medicion.valor
+    }));
+
+
+
+    // consultar únicamente parámetros objetivo validados
+    const parametros = await ParametroControl.findOne({
+      prueba: analisis.prueba,
+      nivelControl: analisis.nivelControl,
+      lote: analisis.lote,
+      equipo: analisis.equipo,
+      estado: "validado"
+    });
+
+
+    // verificar que existan parámetros objetivo
+    if (!parametros) {
+      return res.status(404).json({
+        mensaje:
+          "No existen parámetros objetivo registrados para esta prueba, nivel, lote y equipo.",
+        prueba: analisis.prueba,
+        nivelControl: analisis.nivelControl,
+        lote: analisis.lote,
+        equipo: analisis.equipo
+      });
+    }
+
+    // validar los parámetros objetivo recuperados
+    if (
+      !Number.isFinite(parametros.media) ||
+      !Number.isFinite(parametros.desviacionEstandar) ||
+      parametros.desviacionEstandar <= 0
+    ) {
+      return res.status(422).json({
+        mensaje: "Los parámetros objetivo registrados no son válidos."
+      });
+    }
+
+
+    // devolver los datos para comprobar la consulta
+    
+    // generar la gráfica con las mediciones válidas
+    // y los parámetros objetivo validados
+    const imagen = await generarGraficaLeveyJennings({
+      prueba: analisis.prueba,
+      media: parametros.media,
+      desviacionEstandar: parametros.desviacionEstandar,
+      resultados,
+      alertas: []
+    });
+
+    // devolver la gráfica en formato PNG
+    res.setHeader("Content-Type", "image/png");
+
+    res.setHeader(
+      "Content-Disposition",
+      'inline; filename="grafica-levey-jennings.png"'
+    );
+
+    return res.status(200).send(imagen);
+
+
+  } catch (error) {
+    console.error("Error al consultar datos para la gráfica:", error);
+
+    return res.status(500).json({
+      mensaje: "No fue posible recuperar los datos para la gráfica."
+    });
+  }
+});
+
 
 // Endpoint para consultar el historial de mediciones con filtros
 
@@ -4344,7 +4620,7 @@ async function vincularMedicionesAnalisis({ mediciones, analisisId, session }) {
       "El conjunto contiene identificadores de medición inválidos."
     );
   }
-  
+
   // Comprobar que no existan identificadores repetidos
   const idsUnicos = new Set(ids.map((id) => String(id)));
 

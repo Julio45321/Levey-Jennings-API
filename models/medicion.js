@@ -51,11 +51,41 @@ const medicionSchema = new mongoose.Schema(
       default: null,
     },
 
+
+    // Número de medición dentro de su nivel de control
+    numeroMedicion: {
+      type: Number,
+      min: 1,
+      max: 2,
+      default: null,
+    },
+
+    // Posición real de procesamiento dentro de la corrida
+    ordenAnalitico: {
+      type: Number,
+      min: 1,
+      default: null,
+    },
+
+    // Fecha y hora real de procesamiento, cuando se conozca
+    fechaHoraMedicion: {
+      type: Date,
+      default: null,
+    },
+
+
     corridaId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "CorridaControl",
-    default: null,
-},
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CorridaControl",
+      default: null,
+    },
+
+    // identificar de forma única una solicitud de reemplazo
+    claveIdempotencia: {
+      type: String,
+      default: null,
+      trim: true,
+    },
 
     // Estado de la medición
     estado: {
@@ -108,5 +138,28 @@ const medicionSchema = new mongoose.Schema(
     collection: "mediciones",
   },
 );
+
+
+// impedir que una misma clave de reemplazo se registre dos veces
+medicionSchema.index(
+  { claveIdempotencia: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      claveIdempotencia: { $type: "string" }
+    }
+  }
+);
+
+
+medicionSchema.index({
+  prueba: 1,
+  lote: 1,
+  equipo: 1,
+  corridaId: 1,
+  ordenAnalitico: 1
+});
+
+
 
 module.exports = mongoose.model("Medicion", medicionSchema);

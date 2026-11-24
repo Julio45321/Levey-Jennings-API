@@ -1,0 +1,215 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Historial de Control de Calidad</title>
+
+    <link rel="stylesheet" href="estilos.css">
+</head>
+
+<body>
+
+    <header class="encabezado">
+        <h1>Historial de Control de Calidad</h1>
+        <p>Seguimiento y análisis de resultados por analito</p>
+    </header>
+
+    <main class="contenedor">
+
+        <!-- NAVEGACIÓN -->
+        <section class="tarjeta">
+            <nav aria-label="Navegación principal">
+                <a href="index.html">
+                    Registro de mediciones
+                </a>
+
+                <span> | </span>
+
+                <a href="historial.html" aria-current="page">
+                    Historial y resultados
+                </a>
+            </nav>
+        </section>
+
+       
+<!-- BÚSQUEDA POR ANALITO -->
+<section class="tarjeta">
+
+    <h2>Consultar historial por analito</h2>
+
+    <p class="descripcion">
+        Escribe el nombre del analito para consultar
+        todas sus mediciones y análisis registrados.
+    </p>
+
+    <div class="campo">
+        <label for="historialPrueba">
+            Nombre del analito
+        </label>
+
+        <input
+            type="text"
+            id="historialPrueba"
+            placeholder="Ej. Glucosa"
+            autocomplete="off"
+        >
+    </div>
+
+    <button type="button" id="btnConsultarHistorial">
+        Buscar historial
+    </button>
+
+    <p id="mensajeHistorial" aria-live="polite">
+        Introduce el nombre del analito.
+    </p>
+
+</section>
+
+
+        <!-- RESUMEN -->
+        <section class="tarjeta">
+            <h2>Resumen del control de calidad</h2>
+
+            <p id="resumenHistorial">
+                Todavía no se ha seleccionado un analito.
+            </p>
+
+            <p id="progresoHistorialGrubbs">
+                Progreso de Grubbs: pendiente de consulta.
+            </p>
+
+            <p id="estadoHistorialWestgard">
+                Estado de Westgard: pendiente de consulta.
+            </p>
+        </section>
+
+
+<!-- CONJUNTOS DE CONTROL -->
+<section class="tarjeta">
+
+    <h2>Conjuntos de control encontrados</h2>
+
+    <p>
+        Mediciones organizadas por nivel de control,
+        lote y equipo.
+    </p>
+
+    <div class="tabla-contenedor">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nivel</th>
+                    <th>Lote</th>
+                    <th>Equipo</th>
+                    <th>Mediciones</th>
+                </tr>
+            </thead>
+
+            <tbody id="tablaConjuntosControl">
+                <tr>
+                    <td colspan="4">
+                        Busca un analito para consultar sus conjuntos.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+
+        <!-- MEDICIONES HISTÓRICAS -->
+        <section class="tarjeta">
+            <h2>Mediciones registradas</h2>
+
+            <div class="tabla-contenedor">
+                <table>
+                  <thead>
+    <tr>
+        <th>Fecha</th>
+        <th>Analito</th>
+        <th>Nivel</th>
+        <th>Lote</th>
+        <th>Equipo</th>
+        <th>Resultado</th>
+        <th>Estado Westgard</th>
+        <th>Estado Grubbs</th>
+    </tr>
+</thead>
+
+                    <tbody id="tablaHistorialMediciones">
+                        <tr>
+                            <td colspan="8">
+                                No se ha realizado ninguna consulta.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- LEVEY-JENNINGS -->
+        <section class="tarjeta">
+            <h2>Gráfica de Levey-Jennings</h2>
+
+            <p id="mensajeHistorialLevey">
+                La gráfica aparecerá cuando consultemos
+                las mediciones y sus parámetros objetivo.
+            </p>
+
+            <img id="graficaHistorialLevey"
+                 alt="Gráfica histórica de Levey-Jennings"
+                 style="width: 100%; max-width: 1100px; height: auto;"
+                 hidden>
+        </section>
+
+        <!-- WESTGARD -->
+        <section class="tarjeta">
+            <h2>Reglas de Westgard</h2>
+
+            <p id="mensajeHistorialWestgard">
+                Aquí se mostrarán las evaluaciones diarias,
+                advertencias y reglas de rechazo.
+            </p>
+
+            <div id="resultadosHistorialWestgard"></div>
+        </section>
+
+        <!-- GRUBBS -->
+        <section class="tarjeta">
+            <h2>Prueba de Grubbs</h2>
+
+            <p id="mensajeHistorialGrubbs">
+                Los resultados estadísticos estarán disponibles
+                cuando se complete el conjunto de 20 mediciones.
+            </p>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Parámetro</th>
+                            <th>Cálculo</th>
+                            <th>Resultado</th>
+                            <th>Unidades</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tablaHistorialGrubbs"></tbody>
+                </table>
+            </div>
+
+            <div id="detalleHistorialGrubbs"></div>
+        </section>
+
+    </main>
+
+    <script src="historial.js"></script>
+
+</body>
+</html>
