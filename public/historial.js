@@ -13,50 +13,253 @@ document.addEventListener("DOMContentLoaded", () => {
     "tablaConjuntosControl",
   );
 
+  const graficaHistorialLevey = document.getElementById(
+    "graficaHistorialLevey",
+  );
+
+  const mensajeHistorialLevey = document.getElementById(
+    "mensajeHistorialLevey",
+  );
+
   let medicionesConsultadas = [];
+  let urlGraficaHistorial = null;
+  let solicitudGraficaActual = 0;
 
-
-function mostrarMedicionesHistorial(mediciones) {
-
-    tablaHistorial.innerHTML = "";
-
-    if (mediciones.length === 0) {
-        tablaHistorial.innerHTML =
-            '<tr><td colspan="8">No hay mediciones para este conjunto.</td></tr>';
-        return;
+  async function obtenerParametrosObjetivo(prueba, nivelControl, lote, equipo) {
+    // Evitar consultas con datos incompletos.
+    if (
+      !prueba ||
+      !nivelControl ||
+      !lote ||
+      !equipo ||
+      nivelControl === "Sin nivel" ||
+      lote === "Sin lote" ||
+      equipo === "Sin equipo"
+    ) {
+      throw new Error("El conjunto no tiene todos los datos necesarios.");
     }
 
-    for (const medicion of mediciones) {
+    // Construir los filtros de búsqueda.
+    const filtros = new URLSearchParams({
+      prueba,
+      nivelControl,
+      lote,
+      equipo,
+    });
 
-        const fila = document.createElement("tr");
+    // Consultar los parámetros registrados en MongoDB.
+    const respuesta = await fetch(
+      "/api/control/parametros?" + filtros.toString(),
+    );
 
-        const fecha = medicion.fecha
-            ? new Date(medicion.fecha).toLocaleDateString("es-MX", {
-                timeZone: "UTC"
-            })
-            : "Sin fecha";
+    const resultado = await respuesta.json();
 
-        const columnas = [
-            fecha,
-            medicion.prueba || "",
-            medicion.nivelControl || "Sin nivel",
-            medicion.lote || "Sin lote",
-            medicion.equipo || "Sin equipo",
-            medicion.valor ?? "",
-            "Pendiente de integración",
-            medicion.estado || "Sin estado"
-        ];
+    if (!respuesta.ok) {
+      throw new Error(
+        resultado.mensaje ||
+          "No fue posible consultar los parámetros objetivo.",
+      );
+    }
 
-        for (const valor of columnas) {
-            const celda = document.createElement("td");
-            celda.textContent = String(valor);
-            fila.appendChild(celda);
+    // Verificar que existan parámetros.
+    if (
+      !Array.isArray(resultado.parametros) ||
+      resultado.parametros.length === 0
+    ) {
+      throw new Error(
+        "No existen parámetros objetivo registrados para este conjunto.",
+      );
+    }
+
+    // Evitar utilizar parámetros ambiguos.
+    if (resultado.parametros.length !== 1) {
+      throw new Error(
+        "Se encontró más de un registro de parámetros para este conjunto.",
+      );
+    }
+
+    const parametro = resultado.parametros[0];
+
+    // Validar la media y desviación estándar.
+    if (
+      !Number.isFinite(parametro.media) ||
+      !Number.isFinite(parametro.desviacionEstandar) ||
+      parametro.desviacionEstandar <= 0
+    ) {
+      throw new Error("Los parámetros objetivo registrados no son válidos.");
+    }
+
+    return parametro;
+  }
+
+
+function limpiarGraficaHistorial() {
+
+    solicitudGraficaActual++;
+
+    graficaHistorialLevey.hidden = true;
+    graficaHistorialLevey.removeAttribute("src");
+
+    if (urlGraficaHistorial) {
+        URL.revokeObjectURL(urlGraficaHistorial);
+        urlGraficaHistorial = null;
+    }
+
+    mensajeHistorialLevey.textContent =
+        "Selecciona un conjunto para visualizar su gráfica.";
+}
+
+
+async function mostrarGraficaHistorial(conjunto, mediciones) {
+
+    limpiarGraficaHistorial();
+
+    const solicitud = solicitudGraficaActual;
+
+    mensajeHistorialLevey.textContent =
+        "Generando gráfica de Levey-Jennings...";
+
+    try {
+
+        if (mediciones.length === 0) {
+            throw new Error(
+                "No existen mediciones para generar la gráfica."
+            );
         }
 
-        tablaHistorial.appendChild(fila);
+        const prueba = mediciones[0].prueba;
+
+        // Obtener parámetros objetivo desde MongoDB.
+        const parametros = await obtenerParametrosObjetivo(
+            prueba,
+            conjunto.nivel,
+            conjunto.lote,
+            conjunto.equipo
+        );
+
+        // Preparar los resultados históricos.
+        const resultados = mediciones.map(medicion => ({
+            fecha: medicion.fecha,
+            valor: medicion.valor
+        }));
+
+        // Preparar los datos para nuestra API.
+        const datosGrafica = {
+            prueba:
+                prueba + " - " +
+                conjunto.nivel + " - " +
+                conjunto.lote + " - " +
+                conjunto.equipo,
+
+            media: parametros.media,
+
+            desviacionEstandar:
+                parametros.desviacionEstandar,
+
+            resultados,
+
+            alertas: []
+        };
+
+        // Solicitar la gráfica.
+        const respuesta = await fetch(
+            "/api/levey-jennings/grafica",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(datosGrafica)
+            }
+        );
+
+        if (!respuesta.ok) {
+
+            const error = await respuesta.json();
+
+            throw new Error(
+                error.error ||
+                "No fue posible generar la gráfica."
+            );
+        }
+
+        // Recuperar la imagen PNG.
+        const imagen = await respuesta.blob();
+
+        // Evitar mostrar una gráfica de una selección anterior.
+        if (solicitud !== solicitudGraficaActual) {
+            return;
+        }
+
+        urlGraficaHistorial = URL.createObjectURL(imagen);
+
+        graficaHistorialLevey.src = urlGraficaHistorial;
+
+        graficaHistorialLevey.hidden = false;
+
+        mensajeHistorialLevey.textContent =
+            "Media objetivo: " + parametros.media +
+            " | DE objetivo: " + parametros.desviacionEstandar +
+            " | Mediciones: " + resultados.length;
+
+    } catch (error) {
+
+        if (solicitud !== solicitudGraficaActual) {
+            return;
+        }
+
+        console.error(
+            "ERROR AL GENERAR GRÁFICA HISTÓRICA:",
+            error
+        );
+
+        mensajeHistorialLevey.textContent = error.message;
+
+        graficaHistorialLevey.hidden = true;
     }
 }
 
+
+  function mostrarMedicionesHistorial(mediciones) {
+    tablaHistorial.innerHTML = "";
+
+    if (mediciones.length === 0) {
+      tablaHistorial.innerHTML =
+        '<tr><td colspan="8">No hay mediciones para este conjunto.</td></tr>';
+      return;
+    }
+
+    for (const medicion of mediciones) {
+      const fila = document.createElement("tr");
+
+      const fecha = medicion.fecha
+        ? new Date(medicion.fecha).toLocaleDateString("es-MX", {
+            timeZone: "UTC",
+          })
+        : "Sin fecha";
+
+      const columnas = [
+        fecha,
+        medicion.prueba || "",
+        medicion.nivelControl || "Sin nivel",
+        medicion.lote || "Sin lote",
+        medicion.equipo || "Sin equipo",
+        medicion.valor ?? "",
+        "Pendiente de integración",
+        medicion.estado || "Sin estado",
+      ];
+
+      for (const valor of columnas) {
+        const celda = document.createElement("td");
+        celda.textContent = String(valor);
+        fila.appendChild(celda);
+      }
+
+      tablaHistorial.appendChild(fila);
+    }
+  }
 
   function mostrarConjuntosControl(mediciones) {
     tablaConjuntosControl.innerHTML = "";
@@ -103,46 +306,46 @@ function mostrarMedicionesHistorial(mediciones) {
         a.equipo.localeCompare(b.equipo, "es"),
     );
 
-for (const conjunto of conjuntosOrdenados) {
+    for (const conjunto of conjuntosOrdenados) {
+      const fila = document.createElement("tr");
 
-    const fila = document.createElement("tr");
+      fila.style.cursor = "pointer";
+      fila.title = "Seleccionar este conjunto de control";
 
-    fila.style.cursor = "pointer";
-    fila.title = "Seleccionar este conjunto de control";
-
-    fila.addEventListener("click", () => {
-
-        const medicionesFiltradas =
-            medicionesConsultadas.filter(medicion =>
-
-                (medicion.nivelControl || "Sin nivel") === conjunto.nivel &&
-
-                (medicion.lote || "Sin lote") === conjunto.lote &&
-
-                (medicion.equipo || "Sin equipo") === conjunto.equipo
-
-            );
+      fila.addEventListener("click", () => {
+        const medicionesFiltradas = medicionesConsultadas.filter(
+          (medicion) =>
+            (medicion.nivelControl || "Sin nivel") === conjunto.nivel &&
+            (medicion.lote || "Sin lote") === conjunto.lote &&
+            (medicion.equipo || "Sin equipo") === conjunto.equipo,
+        );
 
         mostrarMedicionesHistorial(medicionesFiltradas);
+
+        mostrarGraficaHistorial(
+    conjunto,
+    medicionesFiltradas
+);
 
         // Resaltar la fila seleccionada.
         const filas = tablaConjuntosControl.querySelectorAll("tr");
 
-        filas.forEach(f => {
-            f.style.backgroundColor = "";
+        filas.forEach((f) => {
+          f.style.backgroundColor = "";
         });
 
         fila.style.backgroundColor = "#dbeafe";
 
         resumenHistorial.textContent =
-            "Conjunto seleccionado: " +
-            conjunto.nivel +
-            " | Lote: " + conjunto.lote +
-            " | Equipo: " + conjunto.equipo +
-            " | Mediciones: " + medicionesFiltradas.length;
-
-    });
-
+          "Conjunto seleccionado: " +
+          conjunto.nivel +
+          " | Lote: " +
+          conjunto.lote +
+          " | Equipo: " +
+          conjunto.equipo +
+          " | Mediciones: " +
+          medicionesFiltradas.length;
+      });
 
       const columnas = [
         conjunto.nivel,
@@ -179,6 +382,8 @@ for (const conjunto of conjuntosOrdenados) {
     tablaConjuntosControl.innerHTML = "";
 
     medicionesConsultadas = [];
+
+    limpiarGraficaHistorial();
 
     resumenHistorial.textContent = "Consultando mediciones...";
 
@@ -229,15 +434,13 @@ for (const conjunto of conjuntosOrdenados) {
         mediciones.length;
 
       // Guardar las mediciones recuperadas.
-medicionesConsultadas = mediciones;
+      medicionesConsultadas = mediciones;
 
-// Mostrar los conjuntos encontrados.
-mostrarConjuntosControl(mediciones);
+      // Mostrar los conjuntos encontrados.
+      mostrarConjuntosControl(mediciones);
 
-// Mostrar inicialmente todas las mediciones del analito.
-mostrarMedicionesHistorial(mediciones);
-
-      
+      // Mostrar inicialmente todas las mediciones del analito.
+      mostrarMedicionesHistorial(mediciones);
 
       console.log("HISTORIAL RECUPERADO:", mediciones);
     } catch (error) {

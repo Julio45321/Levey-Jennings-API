@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const corridaControlSchema = new mongoose.Schema(
@@ -57,15 +56,71 @@ const corridaControlSchema = new mongoose.Schema(
     N: {
       type: Number,
       required: true,
-      enum: [2, 3, 4, 6],
+      enum: [1, 2, 3, 4, 6],
+    },
+// Estado de la corrida de control
+estado: {
+    type: String,
+    enum: [
+        "registrada",
+        "pendiente_evaluacion",
+        "advertencia",
+        "aceptada",
+        "rechazada"
+    ],
+    default: "registrada",
+},
+
+// Evaluación de Westgard
+evaluacionWestgard: {
+
+    fechaEvaluacion: {
+        type: Date,
+        default: null,
     },
 
-    // Estado de la corrida
-    estado: {
-      type: String,
-      enum: ["registrada", "aceptada", "rechazada"],
-      default: "registrada",
+    reglasConfiguradas: {
+        type: [String],
+        default: [],
     },
+
+    reglasEvaluadas: {
+        type: [String],
+        default: [],
+    },
+
+    reglasNoEvaluadas: {
+        type: [String],
+        default: [],
+    },
+
+    parametrosUtilizados: {
+        type: [mongoose.Schema.Types.Mixed],
+        default: [],
+    },
+
+    medicionesEvaluadas: {
+        type: [mongoose.Schema.Types.Mixed],
+        default: [],
+    },
+
+    alertas: {
+        type: [mongoose.Schema.Types.Mixed],
+        default: [],
+    },
+
+    mensaje: {
+        type: String,
+        default: "",
+    },
+
+    versionEvaluacion: {
+        type: String,
+        default: null,
+    },
+
+},
+
   },
   {
     timestamps: true,
@@ -73,7 +128,4 @@ const corridaControlSchema = new mongoose.Schema(
   },
 );
 
-module.exports = mongoose.model(
-  "CorridaControl",
-  corridaControlSchema,
-);
+module.exports = mongoose.model("CorridaControl", corridaControlSchema);
